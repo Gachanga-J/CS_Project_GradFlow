@@ -122,13 +122,16 @@
                                                       action="{{ route('admin.submissions.grade', $submission) }}"
                                                       class="flex flex-wrap items-center gap-2">
                                                     @csrf
-                                                    <input type="number"
-                                                           name="grade"
-                                                           min="0"
-                                                           max="100"
-                                                           placeholder="Grade /100"
-                                                           required
-                                                           class="text-sm border-gray-300 rounded-md shadow-sm w-28">
+                                                    <div style="display:flex; align-items:center; gap:6px;">
+                                                        <input type="number"
+                                                               name="grade"
+                                                               min="0"
+                                                               max="100"
+                                                               placeholder="0"
+                                                               required
+                                                               class="text-sm border-gray-300 rounded-md shadow-sm w-20">
+                                                        <span class="text-sm font-medium text-gray-600">/ 100</span>
+                                                    </div>
                                                     <input type="text"
                                                            name="admin_feedback"
                                                            placeholder="Feedback (optional)"
@@ -144,13 +147,16 @@
                                                       action="{{ route('admin.submissions.grade', $submission) }}"
                                                       class="flex flex-wrap items-center gap-2">
                                                     @csrf
-                                                    <input type="number"
-                                                           name="grade"
-                                                           min="0"
-                                                           max="100"
-                                                           value="{{ $submission->grade }}"
-                                                           required
-                                                           class="text-sm border-gray-300 rounded-md shadow-sm w-28">
+                                                    <div style="display:flex; align-items:center; gap:6px;">
+                                                        <input type="number"
+                                                               name="grade"
+                                                               min="0"
+                                                               max="100"
+                                                               value="{{ $submission->grade }}"
+                                                               required
+                                                               class="text-sm border-gray-300 rounded-md shadow-sm w-20">
+                                                        <span class="text-sm font-medium text-gray-600">/ 100</span>
+                                                    </div>
                                                     <input type="text"
                                                            name="admin_feedback"
                                                            value="{{ $submission->admin_feedback }}"

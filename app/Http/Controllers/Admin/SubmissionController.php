@@ -30,10 +30,11 @@ class SubmissionController extends Controller
     {
         abort_if(!$submission->file_path, 404);
 
-        return response()->download(
-            storage_path('app/' . $submission->file_path),
-            $submission->file_name
-        );
+        $fullPath = storage_path('app/private/' . $submission->file_path);
+
+        abort_if(!file_exists($fullPath), 404, 'File not found.');
+
+        return response()->download($fullPath, $submission->file_name);
     }
 
     /**
