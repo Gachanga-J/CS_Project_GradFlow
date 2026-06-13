@@ -2,17 +2,19 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['first_name', 'last_name', 'email', 'password', 'role', 'department_id', 'is_active'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -27,6 +29,88 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * The department this user belongs to (nullable for admins).
+     */
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    /**
+     * The student profile linked to this user (if role = student).
+     */
+    public function student(): HasOne
+    {
+        return $this->hasOne(Student::class);
+    }
+
+    /**
+     * The supervisor profile linked to this user (if role = supervisor).
+     */
+    public function supervisor(): HasOne
+    {
+        return $this->hasOne(Supervisor::class);
+    }
+
+    /**
+     * Check if the user is a student.
+     */
+    public function isStudent(): bool
+    {
+        return $this->role === 'student';
+    }
+
+    /**
+     * Get the name of this user's dashboard route, based on their role.
+     */
+    public function dashboardRoute(): string
+    {
+        return match ($this->role) {
+            'student' => 'dashboard.student',
+            'supervisor' => 'dashboard.supervisor',
+            'admin' => 'dashboard.admin',
+            default => 'login',
+        };
+    }
+
+    /**
+     * Check if the user is a supervisor.
+     */
+    public function isSupervisor(): bool
+    {
+        return $this->role === 'supervisor';
+    }
+
+    /**
+     * Check if the user is an administrator.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Get the user's full name.
+     */
+    public function getFullNameAttribute(): string
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
+
+    /**
+     * Generate the expected GradFlow email for a given name and role.
+     *
+     * Example: generateEmail('Jane', 'Doe', 'stu') => 'janedoe.stu@gradflow.com'
+     */
+    public static function generateEmail(string $firstName, string $lastName, string $roleSuffix): string
+    {
+        $normalized = strtolower(preg_replace('/[^A-Za-z]/', '', $firstName . $lastName));
+
+        return "{$normalized}.{$roleSuffix}@gradflow.com";
     }
 }
