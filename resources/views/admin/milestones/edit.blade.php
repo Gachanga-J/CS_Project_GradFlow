@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Create Milestone') }}
+            {{ __('Edit Milestone') }}
         </h2>
     </x-slot>
 
@@ -11,11 +11,12 @@
                 <div class="p-6">
 
                     <h3 class="text-lg font-semibold text-gray-700 mb-6">
-                        New Milestone / Deliverable
+                        Edit Milestone / Deliverable
                     </h3>
 
-                    <form method="POST" action="{{ route('admin.milestones.store') }}">
+                    <form method="POST" action="{{ route('admin.milestones.update', $milestone) }}">
                         @csrf
+                        @method('PUT')
 
                         {{-- Title --}}
                         <div class="mb-4">
@@ -26,7 +27,7 @@
                             <input type="text"
                                    id="title"
                                    name="title"
-                                   value="{{ old('title') }}"
+                                   value="{{ old('title', $milestone->title) }}"
                                    placeholder="e.g. Project Proposal, Literature Review"
                                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-indigo-200 @error('title') border-red-500 @enderror">
                             @error('title')
@@ -44,7 +45,7 @@
                                       name="description"
                                       rows="4"
                                       placeholder="Instructions or details for students..."
-                                      class="w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-indigo-200 @error('description') border-red-500 @enderror">{{ old('description') }}</textarea>
+                                      class="w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-indigo-200 @error('description') border-red-500 @enderror">{{ old('description', $milestone->description) }}</textarea>
                             @error('description')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
@@ -59,7 +60,7 @@
                             <input type="date"
                                    id="deadline"
                                    name="deadline"
-                                   value="{{ old('deadline') }}"
+                                   value="{{ old('deadline', $milestone->deadline?->format('Y-m-d')) }}"
                                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-indigo-200 @error('deadline') border-red-500 @enderror">
                             @error('deadline')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -75,7 +76,7 @@
                             <input type="number"
                                    id="sequence_order"
                                    name="sequence_order"
-                                   value="{{ old('sequence_order', 1) }}"
+                                   value="{{ old('sequence_order', $milestone->sequence_order) }}"
                                    min="1"
                                    class="w-32 border-gray-300 rounded-md shadow-sm focus:ring focus:ring-indigo-200 @error('sequence_order') border-red-500 @enderror">
                             <p class="text-xs text-gray-400 mt-1">
@@ -94,7 +95,7 @@
                             </a>
                             <button type="submit"
                                     style="font-size:14px; font-weight:600; padding:8px 20px; border-radius:6px; border:2px solid #3730a3; background:#4f46e5; color:white; cursor:pointer;">
-                                Create Milestone
+                                Update Milestone
                             </button>
                         </div>
 

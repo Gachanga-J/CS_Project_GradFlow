@@ -9,7 +9,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
 
             @if (session('success'))
-                <div class="p-4 bg-green-100 text-green-700 rounded">
+                <div class="p-4 bg-green-100 text-green-700 rounded border border-green-300">
                     {{ session('success') }}
                 </div>
             @endif
@@ -23,10 +23,8 @@
                             <h3 class="text-lg font-semibold text-gray-800">
                                 {{ $milestone->sequence_order }}. {{ $milestone->title }}
                             </h3>
-                            <span class="px-3 py-1 rounded-full text-xs font-medium
-                                @if($milestone->status === 'open') bg-green-100 text-green-700
-                                @else bg-gray-100 text-gray-500
-                                @endif">
+                            <span style="padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600;
+                                {{ $milestone->status === 'open' ? 'background:#e0e7ff; color:#3730a3;' : 'background:#f3f4f6; color:#6b7280;' }}">
                                 {{ ucfirst($milestone->status) }}
                             </span>
                         </div>
@@ -66,11 +64,8 @@
                                                 {{-- Supervisor Status --}}
                                                 <div class="mt-2">
                                                     <span class="text-xs font-medium text-gray-500">Supervisor: </span>
-                                                    <span class="px-2 py-0.5 rounded-full text-xs font-medium
-                                                        @if($submission->status === 'supervisor_approved') bg-blue-100 text-blue-700
-                                                        @elseif($submission->status === 'supervisor_rejected') bg-red-100 text-red-700
-                                                        @else bg-gray-100 text-gray-500
-                                                        @endif">
+                                                    <span style="padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600;
+                                                        {{ $submission->status === 'supervisor_approved' ? 'background:#dbeafe; color:#1d4ed8;' : ($submission->status === 'supervisor_rejected' ? 'background:#fee2e2; color:#dc2626;' : 'background:#f3f4f6; color:#6b7280;') }}">
                                                         @if($submission->status === 'supervisor_approved') Approved
                                                         @elseif($submission->status === 'supervisor_rejected') Rejected
                                                         @else Pending
@@ -97,30 +92,26 @@
                                                 @endif
                                             </div>
 
-                                            <span class="px-3 py-1 rounded-full text-xs font-medium shrink-0
-                                                @if($submission->status === 'graded') bg-green-100 text-green-700
-                                                @elseif($submission->status === 'supervisor_approved') bg-blue-100 text-blue-700
-                                                @elseif($submission->status === 'supervisor_rejected') bg-red-100 text-red-700
-                                                @else bg-yellow-100 text-yellow-700
-                                                @endif">
+                                            <span style="padding:4px 12px; border-radius:999px; font-size:11px; font-weight:600; flex-shrink:0;
+                                                {{ $submission->status === 'graded' ? 'background:#dcfce7; color:#15803d;' : ($submission->status === 'supervisor_approved' ? 'background:#dbeafe; color:#1d4ed8;' : ($submission->status === 'supervisor_rejected' ? 'background:#fee2e2; color:#dc2626;' : 'background:#fef9c3; color:#a16207;')) }}">
                                                 {{ ucfirst(str_replace('_', ' ', $submission->status)) }}
                                             </span>
                                         </div>
 
                                         {{-- Actions --}}
-                                        <div class="mt-4 flex flex-wrap items-start gap-3">
+                                        <div class="mt-4 flex flex-wrap items-center gap-3">
 
                                             {{-- Download --}}
                                             <a href="{{ route('admin.submissions.download', $submission) }}"
-                                               class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-1.5 px-4 rounded-md">
-                                                Download
+                                               style="font-size:13px; font-weight:600; padding:6px 16px; border-radius:6px; border:2px solid #6b7280; background:white; color:#374151; text-decoration:none;">
+                                                Download File
                                             </a>
 
                                             {{-- Grade Form --}}
                                             @if ($submission->status !== 'graded')
                                                 <form method="POST"
                                                       action="{{ route('admin.submissions.grade', $submission) }}"
-                                                      class="flex flex-wrap items-center gap-2">
+                                                      style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
                                                     @csrf
                                                     <div style="display:flex; align-items:center; gap:6px;">
                                                         <input type="number"
@@ -137,15 +128,15 @@
                                                            placeholder="Feedback (optional)"
                                                            class="text-sm border-gray-300 rounded-md shadow-sm w-56">
                                                     <button type="submit"
-                                                            class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-1.5 px-4 rounded-md">
-                                                        Grade
+                                                            style="font-size:13px; font-weight:600; padding:6px 16px; border-radius:6px; border:2px solid #3730a3; background:#4f46e5; color:white; cursor:pointer;">
+                                                        Grade Submission
                                                     </button>
                                                 </form>
                                             @else
                                                 {{-- Regrade Form --}}
                                                 <form method="POST"
                                                       action="{{ route('admin.submissions.grade', $submission) }}"
-                                                      class="flex flex-wrap items-center gap-2">
+                                                      style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
                                                     @csrf
                                                     <div style="display:flex; align-items:center; gap:6px;">
                                                         <input type="number"
@@ -163,8 +154,8 @@
                                                            placeholder="Feedback (optional)"
                                                            class="text-sm border-gray-300 rounded-md shadow-sm w-56">
                                                     <button type="submit"
-                                                            class="bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold py-1.5 px-4 rounded-md">
-                                                        Regrade
+                                                            style="font-size:13px; font-weight:600; padding:6px 16px; border-radius:6px; border:2px solid #4b5563; background:white; color:#374151; cursor:pointer;">
+                                                        Regrade Submission
                                                     </button>
                                                 </form>
                                             @endif

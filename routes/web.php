@@ -22,6 +22,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Student Routes
     Route::prefix('student')->name('student.')->middleware('role:student')->group(function () {
+        // Projects
         Route::get('/projects/create', [App\Http\Controllers\Student\ProjectController::class, 'create'])->name('projects.create');
         Route::post('/projects', [App\Http\Controllers\Student\ProjectController::class, 'store'])->name('projects.store');
         Route::get('/projects/{project}', [App\Http\Controllers\Student\ProjectController::class, 'show'])->name('projects.show');
@@ -33,15 +34,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Admin Routes
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
-    
-
         // Milestones
         Route::get('/milestones', [App\Http\Controllers\Admin\MilestoneController::class, 'index'])->name('milestones.index');
         Route::get('/milestones/create', [App\Http\Controllers\Admin\MilestoneController::class, 'create'])->name('milestones.create');
         Route::post('/milestones', [App\Http\Controllers\Admin\MilestoneController::class, 'store'])->name('milestones.store');
+        Route::get('/milestones/{milestone}/edit', [App\Http\Controllers\Admin\MilestoneController::class, 'edit'])->name('milestones.edit');
+        Route::put('/milestones/{milestone}', [App\Http\Controllers\Admin\MilestoneController::class, 'update'])->name('milestones.update');
         Route::post('/milestones/{milestone}/toggle', [App\Http\Controllers\Admin\MilestoneController::class, 'toggleStatus'])->name('milestones.toggle');
         Route::delete('/milestones/{milestone}', [App\Http\Controllers\Admin\MilestoneController::class, 'destroy'])->name('milestones.destroy');
-        
+
         // Submissions
         Route::get('/submissions', [App\Http\Controllers\Admin\SubmissionController::class, 'index'])->name('submissions.index');
         Route::get('/submissions/{submission}/download', [App\Http\Controllers\Admin\SubmissionController::class, 'download'])->name('submissions.download');

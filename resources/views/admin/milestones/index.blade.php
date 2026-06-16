@@ -9,15 +9,15 @@
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
             @if (session('success'))
-                <div class="p-4 bg-green-100 text-green-700 rounded">
-                    ✅ {{ session('success') }}
+                <div class="p-4 bg-green-100 text-green-700 rounded border border-green-300">
+                    {{ session('success') }}
                 </div>
             @endif
 
-            <div class="flex justify-between items-center">
-                <h3 class="text-lg font-semibold text-gray-800">🏁 All Milestones</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 class="text-lg font-semibold text-gray-800">All Milestones</h3>
                 <a href="{{ route('admin.milestones.create') }}"
-                   class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2 px-5 rounded-md">
+                   style="display:inline-flex; align-items:center; background:#4f46e5; color:white; font-weight:600; font-size:14px; padding:10px 20px; border-radius:6px; border:2px solid #3730a3; text-decoration:none;">
                     + New Milestone
                 </a>
             </div>
@@ -44,28 +44,32 @@
                                         @endif
                                         @if ($milestone->deadline)
                                             <p class="text-xs text-gray-400 mt-1">
-                                                📅 Deadline: {{ $milestone->deadline->format('d M Y') }}
+                                                Deadline: {{ $milestone->deadline->format('d M Y') }}
                                             </p>
                                         @endif
                                     </div>
 
-                                    <div class="flex items-center gap-3 shrink-0 ml-4">
-                                        <span class="px-3 py-1 rounded-full text-xs font-medium
-                                            @if($milestone->status === 'open') bg-indigo-100 text-indigo-700
-                                            @else bg-gray-200 text-gray-600
-                                            @endif">
+                                    <div style="display:flex; align-items:center; gap:8px; flex-shrink:0; margin-left:16px;">
+
+                                        <span style="padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600;
+                                            {{ $milestone->status === 'open' ? 'background:#e0e7ff; color:#3730a3;' : 'background:#f3f4f6; color:#6b7280;' }}">
                                             {{ ucfirst($milestone->status) }}
                                         </span>
 
+                                        {{-- Edit --}}
+                                        <a href="{{ route('admin.milestones.edit', $milestone) }}"
+                                           style="font-size:13px; font-weight:600; padding:6px 14px; border-radius:6px; border:2px solid #6b7280; background:white; color:#374151; text-decoration:none;">
+                                            Edit
+                                        </a>
+
                                         {{-- Toggle Status --}}
-                                        <form method="POST"
-                                              action="{{ route('admin.milestones.toggle', $milestone) }}">
+                                        <form method="POST" action="{{ route('admin.milestones.toggle', $milestone) }}">
                                             @csrf
                                             <button type="submit"
-                                                    class="text-xs font-medium py-1 px-3 rounded-md
-                                                    @if($milestone->status === 'open') bg-yellow-100 hover:bg-yellow-200 text-yellow-700
-                                                    @else bg-green-100 hover:bg-green-200 text-green-700
-                                                    @endif">
+                                                    style="font-size:13px; font-weight:600; padding:6px 14px; border-radius:6px; cursor:pointer;
+                                                    {{ $milestone->status === 'open'
+                                                        ? 'border:2px solid #d97706; background:white; color:#d97706;'
+                                                        : 'border:2px solid #16a34a; background:white; color:#16a34a;' }}">
                                                 {{ $milestone->status === 'open' ? 'Close' : 'Reopen' }}
                                             </button>
                                         </form>
@@ -77,12 +81,12 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
-                                                    class="text-xs font-medium py-1 px-3 rounded-md bg-red-100 hover:bg-red-200 text-red-700">
+                                                    style="font-size:13px; font-weight:600; padding:6px 14px; border-radius:6px; border:2px solid #dc2626; background:white; color:#dc2626; cursor:pointer;">
                                                 Delete
                                             </button>
                                         </form>
-                                    </div>
 
+                                    </div>
                                 </div>
                             @endforeach
                         </div>

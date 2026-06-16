@@ -9,7 +9,7 @@
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
             @if (session('success'))
-                <div class="p-4 bg-green-100 text-green-700 rounded">
+                <div class="p-4 bg-green-100 text-green-700 rounded border border-green-300">
                     {{ session('success') }}
                 </div>
             @endif
@@ -21,10 +21,8 @@
                         <h3 class="text-lg font-semibold text-gray-800">
                             {{ $milestone->sequence_order }}. {{ $milestone->title }}
                         </h3>
-                        <span class="px-3 py-1 rounded-full text-xs font-medium
-                            @if($milestone->status === 'open') bg-green-100 text-green-700
-                            @else bg-gray-100 text-gray-600
-                            @endif">
+                        <span style="padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600;
+                            {{ $milestone->status === 'open' ? 'background:#dcfce7; color:#15803d;' : 'background:#f3f4f6; color:#6b7280;' }}">
                             {{ ucfirst($milestone->status) }}
                         </span>
                     </div>
@@ -57,12 +55,8 @@
 
                         {{-- Status --}}
                         <div class="mb-4">
-                            <span class="px-3 py-1 rounded-full text-xs font-medium
-                                @if($submission->status === 'graded') bg-green-100 text-green-700
-                                @elseif($submission->status === 'supervisor_approved') bg-blue-100 text-blue-700
-                                @elseif($submission->status === 'supervisor_rejected') bg-red-100 text-red-700
-                                @else bg-yellow-100 text-yellow-700
-                                @endif">
+                            <span style="padding:4px 12px; border-radius:999px; font-size:11px; font-weight:600;
+                                {{ $submission->status === 'graded' ? 'background:#dcfce7; color:#15803d;' : ($submission->status === 'supervisor_approved' ? 'background:#dbeafe; color:#1d4ed8;' : ($submission->status === 'supervisor_rejected' ? 'background:#fee2e2; color:#dc2626;' : 'background:#fef9c3; color:#a16207;')) }}">
                                 {{ ucfirst(str_replace('_', ' ', $submission->status)) }}
                             </span>
                         </div>
@@ -94,11 +88,11 @@
             @endif
 
             {{-- Upload Form --}}
-            @if ($milestone->status === 'open')
+            @if ($milestone->status === 'open' && ($submission === null || $submission->status !== 'graded'))
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">
-                            {{ $submission ? 'Resubmit' : 'Submit Deliverable' }}
+                            {{ $submission ? 'Resubmit Deliverable' : 'Submit Deliverable' }}
                         </h3>
                         <p class="text-sm text-gray-500 mb-6">
                             Accepted formats: <strong>PDF, DOC, DOCX</strong>. Max size: <strong>5MB</strong>.
@@ -134,19 +128,23 @@
 
                             <div class="flex items-center justify-end gap-4">
                                 <a href="{{ route('dashboard.student') }}"
-                                   class="text-sm text-gray-500 hover:text-gray-700">
+                                   style="font-size:14px; font-weight:600; padding:8px 20px; border-radius:6px; border:2px solid #6b7280; background:white; color:#374151; text-decoration:none;">
                                     Cancel
                                 </a>
                                 <button type="submit"
-                                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-md">
-                                    {{ $submission ? 'Resubmit' : 'Submit' }}
+                                        style="font-size:14px; font-weight:600; padding:8px 20px; border-radius:6px; border:2px solid #3730a3; background:#4f46e5; color:white; cursor:pointer;">
+                                    {{ $submission ? 'Resubmit Milestone' : 'Submit Milestone' }}
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
+            @elseif ($submission?->status === 'graded')
+                <div class="p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm text-center">
+                    This submission has been graded. No further submissions are allowed.
+                </div>
             @else
-                <div class="p-4 bg-gray-100 text-gray-500 rounded-lg text-sm text-center">
+                <div class="p-4 bg-gray-100 border border-gray-200 text-gray-500 rounded-lg text-sm text-center">
                     This milestone is closed and no longer accepting submissions.
                 </div>
             @endif

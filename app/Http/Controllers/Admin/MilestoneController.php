@@ -53,6 +53,37 @@ class MilestoneController extends Controller
     }
 
     /**
+     * Show the form to edit a milestone.
+     */
+    public function edit(Milestone $milestone)
+    {
+        return view('admin.milestones.edit', compact('milestone'));
+    }
+
+    /**
+     * Update a milestone.
+     */
+    public function update(Request $request, Milestone $milestone)
+    {
+        $request->validate([
+            'title'          => ['required', 'string', 'max:150'],
+            'description'    => ['nullable', 'string', 'max:1000'],
+            'deadline'       => ['nullable', 'date'],
+            'sequence_order' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $milestone->update([
+            'title'          => $request->title,
+            'description'    => $request->description,
+            'deadline'       => $request->deadline,
+            'sequence_order' => $request->sequence_order,
+        ]);
+
+        return redirect()->route('admin.milestones.index')
+            ->with('success', 'Milestone updated successfully!');
+    }
+
+    /**
      * Close or reopen a milestone.
      */
     public function toggleStatus(Milestone $milestone)
