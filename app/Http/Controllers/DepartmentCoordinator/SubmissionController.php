@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\DepartmentCoordinator;
 
 use App\Http\Controllers\Controller;
 use App\Models\Milestone;
@@ -20,7 +20,7 @@ class SubmissionController extends Controller
             }
         ])->orderBy('sequence_order')->get();
 
-        return view('admin.submissions.index', compact('milestones'));
+        return view('department-coordinator.submissions.index', compact('milestones'));
     }
 
     /**

@@ -16,7 +16,7 @@
 
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h3 class="text-lg font-semibold text-gray-800">All Milestones</h3>
-                <a href="{{ route('admin.milestones.create') }}"
+                <a href="{{ route('department-coordinator.milestones.create') }}"
                    style="display:inline-flex; align-items:center; background:#4f46e5; color:white; font-weight:600; font-size:14px; padding:10px 20px; border-radius:6px; border:2px solid #3730a3; text-decoration:none;">
                     + New Milestone
                 </a>
@@ -57,13 +57,13 @@
                                         </span>
 
                                         {{-- Edit --}}
-                                        <a href="{{ route('admin.milestones.edit', $milestone) }}"
+                                        <a href="{{ route('department-coordinator.milestones.edit', $milestone) }}"
                                            style="font-size:13px; font-weight:600; padding:6px 14px; border-radius:6px; border:2px solid #6b7280; background:white; color:#374151; text-decoration:none;">
                                             Edit
                                         </a>
 
                                         {{-- Toggle Status --}}
-                                        <form method="POST" action="{{ route('admin.milestones.toggle', $milestone) }}">
+                                        <form method="POST" action="{{ route('department-coordinator.milestones.toggle', $milestone) }}">
                                             @csrf
                                             <button type="submit"
                                                     style="font-size:13px; font-weight:600; padding:6px 14px; border-radius:6px; cursor:pointer;
@@ -76,7 +76,7 @@
 
                                         {{-- Delete --}}
                                         <form method="POST"
-                                              action="{{ route('admin.milestones.destroy', $milestone) }}"
+                                              action="{{ route('department-coordinator.milestones.destroy', $milestone) }}"
                                               onsubmit="return confirm('Delete this milestone?')">
                                             @csrf
                                             @method('DELETE')

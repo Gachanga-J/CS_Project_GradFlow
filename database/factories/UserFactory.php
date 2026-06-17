@@ -25,7 +25,7 @@ class UserFactory extends Factory
             'last_name' => $lastName,
             'email' => User::generateEmail($firstName, $lastName, 'stu'),
             'email_verified_at' => now(),
-            'password' => 'password',
+            'password' => config('app.seed_password'),
             'role' => 'student',
             'department_id' => null,
             'is_active' => true,

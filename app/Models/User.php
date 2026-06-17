@@ -34,7 +34,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * The department this user belongs to (nullable for admins).
+     * The department this user belongs to (nullable for system administrators).
      */
     public function department(): BelongsTo
     {
@@ -73,7 +73,8 @@ class User extends Authenticatable implements MustVerifyEmail
         return match ($this->role) {
             'student' => 'dashboard.student',
             'supervisor' => 'dashboard.supervisor',
-            'admin' => 'dashboard.admin',
+            'department_coordinator' => 'dashboard.department-coordinator',
+            'system_administrator' => 'dashboard.system-administrator',
             default => 'login',
         };
     }
@@ -87,11 +88,19 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Check if the user is an administrator.
+     * Check if the user is a department coordinator.
      */
-    public function isAdmin(): bool
+    public function isDepartmentCoordinator(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === 'department_coordinator';
+    }
+
+    /**
+     * Check if the user is a system administrator.
+     */
+    public function isSystemAdministrator(): bool
+    {
+        return $this->role === 'system_administrator';
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\DepartmentCoordinator;
 
 use App\Http\Controllers\Controller;
 use App\Models\Milestone;
@@ -16,7 +16,7 @@ class MilestoneController extends Controller
     {
         $milestones = Milestone::orderBy('sequence_order')->get();
 
-        return view('admin.milestones.index', compact('milestones'));
+        return view('department-coordinator.milestones.index', compact('milestones'));
     }
 
     /**
@@ -24,7 +24,7 @@ class MilestoneController extends Controller
      */
     public function create()
     {
-        return view('admin.milestones.create');
+        return view('department-coordinator.milestones.create');
     }
 
     /**
@@ -48,7 +48,7 @@ class MilestoneController extends Controller
             'status'         => 'open',
         ]);
 
-        return redirect()->route('admin.milestones.index')
+        return redirect()->route('department-coordinator.milestones.index')
             ->with('success', 'Milestone created successfully!');
     }
 
@@ -57,7 +57,7 @@ class MilestoneController extends Controller
      */
     public function edit(Milestone $milestone)
     {
-        return view('admin.milestones.edit', compact('milestone'));
+        return view('department-coordinator.milestones.edit', compact('milestone'));
     }
 
     /**
@@ -79,7 +79,7 @@ class MilestoneController extends Controller
             'sequence_order' => $request->sequence_order,
         ]);
 
-        return redirect()->route('admin.milestones.index')
+        return redirect()->route('department-coordinator.milestones.index')
             ->with('success', 'Milestone updated successfully!');
     }
 

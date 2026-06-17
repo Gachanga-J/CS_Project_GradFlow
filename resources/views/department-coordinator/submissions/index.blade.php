@@ -102,7 +102,7 @@
                                         <div class="mt-4 flex flex-wrap items-center gap-3">
 
                                             {{-- Download --}}
-                                            <a href="{{ route('admin.submissions.download', $submission) }}"
+                                            <a href="{{ route('department-coordinator.submissions.download', $submission) }}"
                                                style="font-size:13px; font-weight:600; padding:6px 16px; border-radius:6px; border:2px solid #6b7280; background:white; color:#374151; text-decoration:none;">
                                                 Download File
                                             </a>
@@ -110,7 +110,7 @@
                                             {{-- Grade Form --}}
                                             @if ($submission->status !== 'graded')
                                                 <form method="POST"
-                                                      action="{{ route('admin.submissions.grade', $submission) }}"
+                                                      action="{{ route('department-coordinator.submissions.grade', $submission) }}"
                                                       style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
                                                     @csrf
                                                     <div style="display:flex; align-items:center; gap:6px;">
@@ -135,7 +135,7 @@
                                             @else
                                                 {{-- Regrade Form --}}
                                                 <form method="POST"
-                                                      action="{{ route('admin.submissions.grade', $submission) }}"
+                                                      action="{{ route('department-coordinator.submissions.grade', $submission) }}"
                                                       style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
                                                     @csrf
                                                     <div style="display:flex; align-items:center; gap:6px;">

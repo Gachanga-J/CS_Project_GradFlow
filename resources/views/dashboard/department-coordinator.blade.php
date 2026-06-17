@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Administrator Dashboard') }}
+            {{ __('Department Coordinator Dashboard') }}
         </h2>
     </x-slot>
 
@@ -49,7 +49,7 @@
                 <div class="p-6">
                     <h3 style="font-size:16px; font-weight:600; color:#1f2937; margin-bottom:16px;">Quick Actions</h3>
                     <div style="display:flex; gap:12px;">
-                        <a href="{{ route('admin.submissions.index') }}"
+                        <a href="{{ route('department-coordinator.submissions.index') }}"
                            style="flex:1; display:flex; align-items:center; justify-content:center; background:#eab308; color:white; font-weight:600; font-size:14px; padding:12px 20px; border-radius:6px; text-decoration:none;">
                             Review Submissions
                             @if ($pendingSubmissions > 0)
@@ -58,11 +58,11 @@
                                 </span>
                             @endif
                         </a>
-                        <a href="{{ route('admin.milestones.index') }}"
+                        <a href="{{ route('department-coordinator.milestones.index') }}"
                            style="flex:1; display:flex; align-items:center; justify-content:center; background:#4f46e5; color:white; font-weight:600; font-size:14px; padding:12px 20px; border-radius:6px; text-decoration:none;">
                             Manage Milestones
                         </a>
-                        <a href="{{ route('admin.milestones.create') }}"
+                        <a href="{{ route('department-coordinator.milestones.create') }}"
                            style="flex:1; display:flex; align-items:center; justify-content:center; background:#16a34a; color:white; font-weight:600; font-size:14px; padding:12px 20px; border-radius:6px; text-decoration:none;">
                             + New Milestone
                         </a>
