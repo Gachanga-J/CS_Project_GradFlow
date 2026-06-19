@@ -52,6 +52,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/submissions/{submission}/download', [App\Http\Controllers\DepartmentCoordinator\SubmissionController::class, 'download'])->name('submissions.download');
         Route::post('/submissions/{submission}/grade', [App\Http\Controllers\DepartmentCoordinator\SubmissionController::class, 'grade'])->name('submissions.grade');
     });
+
+    // System Administrator Routes
+    Route::prefix('system-administrator')->name('system-administrator.')->middleware('role:system_administrator')->group(function () {
+        // Departments
+        Route::get('/departments', [App\Http\Controllers\SystemAdministrator\DepartmentController::class, 'index'])->name('departments.index');
+        Route::get('/departments/create', [App\Http\Controllers\SystemAdministrator\DepartmentController::class, 'create'])->name('departments.create');
+        Route::post('/departments', [App\Http\Controllers\SystemAdministrator\DepartmentController::class, 'store'])->name('departments.store');
+        Route::get('/departments/{department}/edit', [App\Http\Controllers\SystemAdministrator\DepartmentController::class, 'edit'])->name('departments.edit');
+        Route::put('/departments/{department}', [App\Http\Controllers\SystemAdministrator\DepartmentController::class, 'update'])->name('departments.update');
+        Route::delete('/departments/{department}', [App\Http\Controllers\SystemAdministrator\DepartmentController::class, 'destroy'])->name('departments.destroy');
+    });
 });
 
 Route::middleware('auth')->group(function () {
