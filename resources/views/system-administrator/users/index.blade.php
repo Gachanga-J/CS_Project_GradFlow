@@ -24,7 +24,17 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <div style="display:flex; justify-content:space-between; align-items:end; gap:12px;">
-                        <form method="GET" action="{{ route('system-administrator.users.index') }}" style="display:flex; gap:12px; align-items:end;">
+                        <form method="GET" action="{{ route('system-administrator.users.index') }}" style="display:flex; gap:12px; align-items:end; flex-wrap:wrap;">
+
+                            <div>
+                                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                                <input type="text"
+                                       id="search"
+                                       name="search"
+                                       value="{{ request('search') }}"
+                                       placeholder="Name or email..."
+                                       class="border-gray-300 rounded-md shadow-sm text-sm">
+                            </div>
 
                             <div>
                                 <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Role</label>
@@ -54,7 +64,7 @@
                                 Filter
                             </button>
 
-                            @if (request('role') || request('department_id'))
+                            @if (request('role') || request('department_id') || request('search'))
                                 <a href="{{ route('system-administrator.users.index') }}"
                                    style="font-size:13px; font-weight:600; padding:8px 16px; border-radius:6px; border:2px solid #6b7280; background:white; color:#374151; text-decoration:none;">
                                     Clear
@@ -120,6 +130,16 @@
                                                        style="font-size:12px; font-weight:600; padding:5px 12px; border-radius:6px; border:2px solid #6b7280; background:white; color:#374151; text-decoration:none;">
                                                         Edit
                                                     </a>
+
+                                                    <form method="POST"
+                                                          action="{{ route('system-administrator.users.reset-password', $user) }}"
+                                                          onsubmit="return confirm('Generate a new temporary password for {{ $user->email }}? Their current password will stop working immediately.')">
+                                                        @csrf
+                                                        <button type="submit"
+                                                                style="font-size:12px; font-weight:600; padding:5px 12px; border-radius:6px; border:2px solid #d97706; background:white; color:#d97706; cursor:pointer;">
+                                                            Reset Password
+                                                        </button>
+                                                    </form>
                                                 @endif
 
                                                 @if ($user->id !== auth()->id())

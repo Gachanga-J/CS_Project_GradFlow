@@ -70,6 +70,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/users/{user}/edit', [App\Http\Controllers\SystemAdministrator\UserController::class, 'edit'])->name('users.edit');
         Route::put('/users/{user}', [App\Http\Controllers\SystemAdministrator\UserController::class, 'update'])->name('users.update');
         Route::post('/users/{user}/toggle', [App\Http\Controllers\SystemAdministrator\UserController::class, 'toggleActive'])->name('users.toggle');
+        Route::post('/users/{user}/reset-password', [App\Http\Controllers\SystemAdministrator\UserController::class, 'resetPassword'])->name('users.reset-password');
     });
 });
 

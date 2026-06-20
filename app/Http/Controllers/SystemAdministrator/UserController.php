@@ -18,7 +18,7 @@ class UserController extends Controller
     private const MANAGEABLE_ROLES = ['department_coordinator', 'system_administrator'];
 
     /**
-     * Show all users, optionally filtered by role and/or department.
+     * Show all users, optionally filtered by role, department, and/or a name/email search.
      */
     public function index(Request $request): View
     {
@@ -28,6 +28,14 @@ class UserController extends Controller
             })
             ->when($request->filled('department_id'), function ($query) use ($request) {
                 $query->where('department_id', $request->department_id);
+            })
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->search;
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
             })
             ->orderBy('first_name')
             ->get();
@@ -125,5 +133,21 @@ class UserController extends Controller
         ]);
 
         return back()->with('success', $user->is_active ? 'User activated.' : 'User deactivated.');
+    }
+
+    /**
+     * Generate and assign a new random one-time password for a manageable user.
+     */
+    public function resetPassword(User $user): RedirectResponse
+    {
+        abort_unless(in_array($user->role, self::MANAGEABLE_ROLES, true), 403, 'This user\'s password cannot be reset here.');
+
+        $newPassword = Str::random(12);
+
+        $user->update([
+            'password' => $newPassword,
+        ]);
+
+        return back()->with('success', "Password reset for {$user->email}. New temporary password: {$newPassword} (copy this now, it won't be shown again).");
     }
 }
