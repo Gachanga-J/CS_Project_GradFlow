@@ -53,9 +53,13 @@
                            style="flex:1; display:flex; align-items:center; justify-content:center; background:#4f46e5; color:white; font-weight:600; font-size:14px; padding:12px 20px; border-radius:6px; text-decoration:none;">
                             Manage Departments
                         </a>
-                        <a href="{{ route('system-administrator.departments.create') }}"
+                        <a href="{{ route('system-administrator.users.index') }}"
+                           style="flex:1; display:flex; align-items:center; justify-content:center; background:#0891b2; color:white; font-weight:600; font-size:14px; padding:12px 20px; border-radius:6px; text-decoration:none;">
+                            View Users
+                        </a>
+                        <a href="{{ route('system-administrator.users.create') }}"
                            style="flex:1; display:flex; align-items:center; justify-content:center; background:#16a34a; color:white; font-weight:600; font-size:14px; padding:12px 20px; border-radius:6px; text-decoration:none;">
-                            + New Department
+                            + New User
                         </a>
                     </div>
                 </div>

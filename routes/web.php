@@ -62,6 +62,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/departments/{department}/edit', [App\Http\Controllers\SystemAdministrator\DepartmentController::class, 'edit'])->name('departments.edit');
         Route::put('/departments/{department}', [App\Http\Controllers\SystemAdministrator\DepartmentController::class, 'update'])->name('departments.update');
         Route::delete('/departments/{department}', [App\Http\Controllers\SystemAdministrator\DepartmentController::class, 'destroy'])->name('departments.destroy');
+
+        // Users
+        Route::get('/users', [App\Http\Controllers\SystemAdministrator\UserController::class, 'index'])->name('users.index');
+        Route::get('/users/create', [App\Http\Controllers\SystemAdministrator\UserController::class, 'create'])->name('users.create');
+        Route::post('/users', [App\Http\Controllers\SystemAdministrator\UserController::class, 'store'])->name('users.store');
+        Route::get('/users/{user}/edit', [App\Http\Controllers\SystemAdministrator\UserController::class, 'edit'])->name('users.edit');
+        Route::put('/users/{user}', [App\Http\Controllers\SystemAdministrator\UserController::class, 'update'])->name('users.update');
+        Route::post('/users/{user}/toggle', [App\Http\Controllers\SystemAdministrator\UserController::class, 'toggleActive'])->name('users.toggle');
     });
 });
 
