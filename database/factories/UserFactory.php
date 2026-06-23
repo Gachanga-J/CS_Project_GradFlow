@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
@@ -25,7 +26,7 @@ class UserFactory extends Factory
             'last_name' => $lastName,
             'email' => User::generateEmail($firstName, $lastName, 'stu'),
             'email_verified_at' => now(),
-            'password' => 'password',
+            'password' => Hash::make(env('COMMON_USER_PASSWORD', '@GradFlow123')), // Default password for all users
             'role' => 'student',
             'department_id' => null,
             'is_active' => true,
