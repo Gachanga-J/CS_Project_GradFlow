@@ -26,10 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Student Routes
     Route::prefix('student')->name('student.')->middleware('role:student')->group(function () {
-        // Projects
-        Route::get('/projects/create', [App\Http\Controllers\Student\ProjectController::class, 'create'])->name('projects.create');
-        Route::post('/projects', [App\Http\Controllers\Student\ProjectController::class, 'store'])->name('projects.store');
-        Route::get('/projects/{project}', [App\Http\Controllers\Student\ProjectController::class, 'show'])->name('projects.show');
+        
 
         // Milestone Submissions
         Route::get('/milestones/{milestone}', [App\Http\Controllers\Student\MilestoneSubmissionController::class, 'show'])->name('milestones.show');
