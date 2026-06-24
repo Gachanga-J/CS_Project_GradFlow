@@ -9,85 +9,76 @@ use Illuminate\Support\Facades\Auth;
 
 class MilestoneController extends Controller
 {
-    /**
-     * Show all milestones.
-     */
+    private function departmentId(): int
+    {
+        return Auth::user()->department_id;
+    }
+
     public function index()
     {
-        $milestones = Milestone::orderBy('sequence_order')->get();
+        $milestones = Milestone::where('department_id', $this->departmentId())
+            ->orderBy('sequence_order')
+            ->get();
 
         return view('department-coordinator.milestones.index', compact('milestones'));
     }
 
-    /**
-     * Show the form to create a new milestone.
-     */
     public function create()
     {
         return view('department-coordinator.milestones.create');
     }
 
-    /**
-     * Store a newly created milestone.
-     */
     public function store(Request $request)
     {
         $request->validate([
             'title'          => ['required', 'string', 'max:150'],
-            'description'    => ['nullable', 'string', 'max:1000'],
-            'deadline'       => ['nullable', 'date', 'after:today'],
+            'description'    => ['nullable', 'string'],
+            'deadline'       => ['nullable', 'date'],
             'sequence_order' => ['required', 'integer', 'min:1'],
         ]);
 
         Milestone::create([
             'created_by'     => Auth::id(),
+            'department_id'  => $this->departmentId(),
             'title'          => $request->title,
             'description'    => $request->description,
             'deadline'       => $request->deadline,
-            'sequence_order' => $request->sequence_order,
             'status'         => 'open',
+            'sequence_order' => $request->sequence_order,
         ]);
 
         return redirect()->route('department-coordinator.milestones.index')
             ->with('success', 'Milestone created successfully!');
     }
 
-    /**
-     * Show the form to edit a milestone.
-     */
     public function edit(Milestone $milestone)
     {
+        abort_if($milestone->department_id !== $this->departmentId(), 403);
+
         return view('department-coordinator.milestones.edit', compact('milestone'));
     }
 
-    /**
-     * Update a milestone.
-     */
     public function update(Request $request, Milestone $milestone)
     {
+        abort_if($milestone->department_id !== $this->departmentId(), 403);
+
         $request->validate([
             'title'          => ['required', 'string', 'max:150'],
-            'description'    => ['nullable', 'string', 'max:1000'],
+            'description'    => ['nullable', 'string'],
             'deadline'       => ['nullable', 'date'],
             'sequence_order' => ['required', 'integer', 'min:1'],
         ]);
 
-        $milestone->update([
-            'title'          => $request->title,
-            'description'    => $request->description,
-            'deadline'       => $request->deadline,
-            'sequence_order' => $request->sequence_order,
-        ]);
+        $milestone->update($request->only('title', 'description', 'deadline', 'sequence_order'));
 
         return redirect()->route('department-coordinator.milestones.index')
             ->with('success', 'Milestone updated successfully!');
     }
 
-    /**
-     * Close or reopen a milestone.
-     */
     public function toggleStatus(Milestone $milestone)
     {
+        abort_if($milestone->department_id !== $this->departmentId(), 403);
+
         $milestone->update([
             'status' => $milestone->status === 'open' ? 'closed' : 'open',
         ]);
@@ -95,13 +86,13 @@ class MilestoneController extends Controller
         return back()->with('success', 'Milestone status updated.');
     }
 
-    /**
-     * Delete a milestone.
-     */
     public function destroy(Milestone $milestone)
     {
+        abort_if($milestone->department_id !== $this->departmentId(), 403);
+
         $milestone->delete();
 
-        return back()->with('success', 'Milestone deleted.');
+        return redirect()->route('department-coordinator.milestones.index')
+            ->with('success', 'Milestone deleted.');
     }
 }

@@ -16,6 +16,7 @@
                     </p>
                     <ul class="mt-4 space-y-1 text-sm text-gray-600 dark:text-gray-400">
                         <li><strong>{{ __('Email') }}:</strong> {{ auth()->user()->email }}</li>
+                        <li><strong>{{ __('Department') }}:</strong> {{ auth()->user()->department->name ?? __('Not assigned') }}</li>
                         <li><strong>{{ __('Registration Number') }}:</strong> {{ auth()->user()->student->reg_number }}</li>
                         <li><strong>{{ __('Year of Study') }}:</strong> {{ auth()->user()->student->year_of_study ?? __('Not set') }}</li>
                     </ul>
@@ -31,7 +32,7 @@
 
                     @php
                         $student    = auth()->user()->student;
-                        $milestones = \App\Models\Milestone::orderBy('sequence_order')->get();
+                        $milestones = \App\Models\Milestone::where('department_id', auth()->user()->department_id)->orderBy('sequence_order')->get();
                     @endphp
 
                     @if ($milestones->isEmpty())

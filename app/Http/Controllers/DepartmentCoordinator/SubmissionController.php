@@ -6,28 +6,32 @@ use App\Http\Controllers\Controller;
 use App\Models\Milestone;
 use App\Models\MilestoneSubmission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SubmissionController extends Controller
 {
-    /**
-     * Show all milestone submissions across all students.
-     */
     public function index()
     {
         $milestones = Milestone::with([
             'submissions' => function ($query) {
                 $query->where('is_latest', true)->with('student.user');
             }
-        ])->orderBy('sequence_order')->get();
+        ])
+        ->where('department_id', Auth::user()->department_id)
+        ->orderBy('sequence_order')
+        ->get();
 
         return view('department-coordinator.submissions.index', compact('milestones'));
     }
 
-    /**
-     * Download a submission file.
-     */
     public function download(MilestoneSubmission $submission)
     {
+        // Ensure the submission belongs to this coordinator's department
+        abort_if(
+            $submission->milestone->department_id !== Auth::user()->department_id,
+            403
+        );
+
         abort_if(!$submission->file_path, 404);
 
         $fullPath = storage_path('app/private/' . $submission->file_path);
@@ -37,11 +41,14 @@ class SubmissionController extends Controller
         return response()->download($fullPath, $submission->file_name);
     }
 
-    /**
-     * Grade a submission.
-     */
     public function grade(Request $request, MilestoneSubmission $submission)
     {
+        // Ensure the submission belongs to this coordinator's department
+        abort_if(
+            $submission->milestone->department_id !== Auth::user()->department_id,
+            403
+        );
+
         $request->validate([
             'grade'          => ['required', 'integer', 'min:0', 'max:100'],
             'admin_feedback' => ['nullable', 'string', 'max:1000'],

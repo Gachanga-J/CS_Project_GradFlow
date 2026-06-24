@@ -13,6 +13,7 @@ class Milestone extends Model
 
     protected $fillable = [
         'created_by',
+        'department_id',
         'title',
         'description',
         'deadline',
@@ -27,33 +28,26 @@ class Milestone extends Model
         ];
     }
 
-    /**
-     * The admin who created this milestone.
-     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    /**
-     * All submissions for this milestone.
-     */
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
+
     public function submissions(): HasMany
     {
         return $this->hasMany(MilestoneSubmission::class);
     }
 
-    /**
-     * Check if this milestone is open for submission.
-     */
     public function isOpen(): bool
     {
         return $this->status === 'open';
     }
 
-    /**
-     * Get the submission for a specific student.
-     */
     public function submissionByStudent(int $studentId): ?MilestoneSubmission
     {
         return $this->submissions()
