@@ -78,3 +78,16 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// Notification routes (students)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/notifications/{id}/read', function (string $id) {
+        auth()->user()->notifications()->findOrFail($id)->markAsRead();
+        return back();
+    })->name('notifications.read');
+
+    Route::post('/notifications/read-all', function () {
+        auth()->user()->unreadNotifications->markAsRead();
+        return back();
+    })->name('notifications.read-all');
+});

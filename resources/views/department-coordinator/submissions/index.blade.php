@@ -14,12 +14,29 @@
                 </div>
             @endif
 
+            @php
+                // Total students in this coordinator's department
+                $totalStudents = \App\Models\User::where('role', 'student')
+                    ->where('department_id', auth()->user()->department_id)
+                    ->count();
+            @endphp
+
             @forelse ($milestones as $milestone)
+                @php
+                    $submissions      = $milestone->submissions;
+                    $submittedCount   = $submissions->count();
+                    $gradedCount      = $submissions->where('status', 'graded')->count();
+                    $pendingCount     = $submissions->whereIn('status', ['submitted', 'supervisor_approved'])->count();
+                    $notSubmitted     = max(0, $totalStudents - $submittedCount);
+                    $submitPercent    = $totalStudents > 0 ? round(($submittedCount / $totalStudents) * 100) : 0;
+                    $gradePercent     = $totalStudents > 0 ? round(($gradedCount / $totalStudents) * 100) : 0;
+                @endphp
+
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
 
                         {{-- Milestone Header --}}
-                        <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center justify-between mb-2">
                             <h3 class="text-lg font-semibold text-gray-800">
                                 {{ $milestone->sequence_order }}. {{ $milestone->title }}
                             </h3>
@@ -34,6 +51,57 @@
                                 Deadline: {{ $milestone->deadline->format('d M Y') }}
                             </p>
                         @endif
+
+                        {{-- Submission Stats --}}
+                        <div class="mb-5 p-4 bg-gray-50 border border-gray-100 rounded-lg">
+
+                            {{-- Stats row --}}
+                            <div class="flex flex-wrap gap-4 mb-3">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                                    <span class="text-xs text-gray-600 font-medium">{{ $submittedCount }}/{{ $totalStudents }} submitted</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                                    <span class="text-xs text-gray-600 font-medium">{{ $gradedCount }} graded</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+                                    <span class="text-xs text-gray-600 font-medium">{{ $pendingCount }} awaiting grade</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+                                    <span class="text-xs text-gray-600 font-medium">{{ $notSubmitted }} not submitted</span>
+                                </div>
+                            </div>
+
+                            {{-- Stacked progress bar --}}
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden flex">
+                                {{-- Graded portion --}}
+                                @if($gradePercent > 0)
+                                    <div class="h-2.5 bg-green-500 transition-all duration-500"
+                                         style="width: {{ $gradePercent }}%"
+                                         title="{{ $gradedCount }} graded"></div>
+                                @endif
+                                {{-- Submitted but not graded --}}
+                                @php $submittedOnlyPercent = $submitPercent - $gradePercent; @endphp
+                                @if($submittedOnlyPercent > 0)
+                                    <div class="h-2.5 bg-indigo-400 transition-all duration-500"
+                                         style="width: {{ $submittedOnlyPercent }}%"
+                                         title="{{ $pendingCount }} submitted, awaiting grade"></div>
+                                @endif
+                                {{-- Remaining (not submitted) fills the rest automatically --}}
+                            </div>
+
+                            <div class="flex justify-between mt-1">
+                                <span class="text-xs text-gray-400">0%</span>
+                                <span class="text-xs font-semibold
+                                    {{ $submitPercent === 100 ? 'text-green-600' : 'text-gray-500' }}">
+                                    {{ $submitPercent }}% submitted
+                                </span>
+                                <span class="text-xs text-gray-400">100%</span>
+                            </div>
+                        </div>
 
                         {{-- Submissions --}}
                         @if ($milestone->submissions->isEmpty())
@@ -101,30 +169,23 @@
                                         {{-- Actions --}}
                                         <div class="mt-4 flex flex-wrap items-center gap-3">
 
-                                            {{-- Download --}}
                                             <a href="{{ route('department-coordinator.submissions.download', $submission) }}"
                                                style="font-size:13px; font-weight:600; padding:6px 16px; border-radius:6px; border:2px solid #6b7280; background:white; color:#374151; text-decoration:none;">
                                                 Download File
                                             </a>
 
-                                            {{-- Grade Form --}}
                                             @if ($submission->status !== 'graded')
                                                 <form method="POST"
                                                       action="{{ route('department-coordinator.submissions.grade', $submission) }}"
                                                       style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
                                                     @csrf
                                                     <div style="display:flex; align-items:center; gap:6px;">
-                                                        <input type="number"
-                                                               name="grade"
-                                                               min="0"
-                                                               max="100"
-                                                               placeholder="0"
-                                                               required
+                                                        <input type="number" name="grade" min="0" max="100"
+                                                               placeholder="0" required
                                                                class="text-sm border-gray-300 rounded-md shadow-sm w-20">
                                                         <span class="text-sm font-medium text-gray-600">/ 100</span>
                                                     </div>
-                                                    <input type="text"
-                                                           name="admin_feedback"
+                                                    <input type="text" name="admin_feedback"
                                                            placeholder="Feedback (optional)"
                                                            class="text-sm border-gray-300 rounded-md shadow-sm w-56">
                                                     <button type="submit"
@@ -133,23 +194,17 @@
                                                     </button>
                                                 </form>
                                             @else
-                                                {{-- Regrade Form --}}
                                                 <form method="POST"
                                                       action="{{ route('department-coordinator.submissions.grade', $submission) }}"
                                                       style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
                                                     @csrf
                                                     <div style="display:flex; align-items:center; gap:6px;">
-                                                        <input type="number"
-                                                               name="grade"
-                                                               min="0"
-                                                               max="100"
-                                                               value="{{ $submission->grade }}"
-                                                               required
+                                                        <input type="number" name="grade" min="0" max="100"
+                                                               value="{{ $submission->grade }}" required
                                                                class="text-sm border-gray-300 rounded-md shadow-sm w-20">
                                                         <span class="text-sm font-medium text-gray-600">/ 100</span>
                                                     </div>
-                                                    <input type="text"
-                                                           name="admin_feedback"
+                                                    <input type="text" name="admin_feedback"
                                                            value="{{ $submission->admin_feedback }}"
                                                            placeholder="Feedback (optional)"
                                                            class="text-sm border-gray-300 rounded-md shadow-sm w-56">
@@ -161,7 +216,6 @@
                                             @endif
 
                                         </div>
-
                                     </div>
                                 @endforeach
                             </div>
