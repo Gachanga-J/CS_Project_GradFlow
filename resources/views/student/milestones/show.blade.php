@@ -104,9 +104,10 @@
                             @csrf
 
                             <div class="mb-6">
-                                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md @error('file') border-red-500 @enderror">
+                                <div id="dropzone"
+                                     class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md cursor-pointer transition-colors @error('file') border-red-500 @enderror">
                                     <div class="space-y-1 text-center">
-                                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                        <svg id="dropzone-icon" class="mx-auto h-12 w-12 text-gray-400 transition-colors" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                                             <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                         </svg>
                                         <div class="text-sm text-gray-600">
@@ -160,10 +161,76 @@
     </div>
 
     <script>
-        document.getElementById('file').addEventListener('change', function () {
-            const fileName = this.files[0] ? this.files[0].name : 'No file chosen';
-            document.getElementById('file-chosen').textContent = fileName;
+        const dropzone   = document.getElementById('dropzone');
+        const fileInput  = document.getElementById('file');
+        const fileChosen = document.getElementById('file-chosen');
+        const icon       = document.getElementById('dropzone-icon');
+
+        // Click on dropzone triggers file picker
+        dropzone.addEventListener('click', () => fileInput.click());
+
+        // Show filename when picked via click
+        fileInput.addEventListener('change', function () {
+            if (this.files[0]) showFile(this.files[0]);
         });
+
+        // Drag over — highlight dropzone
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('border-indigo-400', 'bg-indigo-50');
+            icon.classList.add('text-indigo-400');
+            icon.classList.remove('text-gray-400');
+        });
+
+        // Drag leave — remove highlight
+        dropzone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('border-indigo-400', 'bg-indigo-50');
+            icon.classList.remove('text-indigo-400');
+            icon.classList.add('text-gray-400');
+        });
+
+        // Drop — assign file to input
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('border-indigo-400', 'bg-indigo-50');
+            icon.classList.remove('text-indigo-400');
+            icon.classList.add('text-gray-400');
+
+            const file = e.dataTransfer.files[0];
+            if (!file) return;
+
+            // Validate type
+            const allowed = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            if (!allowed.includes(file.type)) {
+                fileChosen.textContent = '❌ Invalid file type. Please use PDF, DOC, or DOCX.';
+                fileChosen.style.color = '#dc2626';
+                return;
+            }
+
+            // Validate size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                fileChosen.textContent = '❌ File too large. Maximum size is 5MB.';
+                fileChosen.style.color = '#dc2626';
+                return;
+            }
+
+            // Assign to file input via DataTransfer
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            fileInput.files = dt.files;
+
+            showFile(file);
+        });
+
+        function showFile(file) {
+            fileChosen.textContent = '✓ ' + file.name;
+            fileChosen.style.color = '#16a34a';
+            dropzone.classList.add('border-green-400', 'bg-green-50');
+            dropzone.classList.remove('border-gray-300');
+            icon.classList.add('text-green-400');
+            icon.classList.remove('text-gray-400');
+        }
     </script>
 
 </x-app-layout>
