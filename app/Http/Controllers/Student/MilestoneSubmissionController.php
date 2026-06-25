@@ -14,8 +14,15 @@ class MilestoneSubmissionController extends Controller
     {
         $user = Auth::user();
 
-        // Ensure the milestone belongs to the student's department
         abort_if($milestone->department_id !== $user->department_id, 403);
+
+        // Auto-mark any unread notifications about this specific milestone as read
+        $user->unreadNotifications()
+            ->whereJsonContains('data->milestone_id', $milestone->id)
+            ->get()
+            ->each(function ($notification) {
+                $notification->markAsRead();
+            });
 
         $student = $user->student;
 
@@ -24,14 +31,19 @@ class MilestoneSubmissionController extends Controller
             ->where('is_latest', true)
             ->first();
 
-        return view('student.milestones.show', compact('milestone', 'submission'));
+        // All versions for history
+        $submissionHistory = MilestoneSubmission::where('milestone_id', $milestone->id)
+            ->where('student_id', $student->id)
+            ->orderBy('version_number', 'desc')
+            ->get();
+
+        return view('student.milestones.show', compact('milestone', 'submission', 'submissionHistory'));
     }
 
     public function store(Request $request, Milestone $milestone)
     {
         $user = Auth::user();
 
-        // Ensure the milestone belongs to the student's department
         abort_if($milestone->department_id !== $user->department_id, 403);
         abort_if($milestone->status === 'closed', 403, 'This milestone is closed.');
 

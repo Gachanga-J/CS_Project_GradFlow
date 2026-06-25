@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -8,6 +9,8 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
+
+    // Dashboards
     Route::get('/dashboard/student', function () {
         return view('dashboard.student');
     })->middleware('role:student')->name('dashboard.student');
@@ -26,9 +29,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Student Routes
     Route::prefix('student')->name('student.')->middleware('role:student')->group(function () {
-        
-
-        // Milestone Submissions
         Route::get('/milestones/{milestone}', [App\Http\Controllers\Student\MilestoneSubmissionController::class, 'show'])->name('milestones.show');
         Route::post('/milestones/{milestone}/submit', [App\Http\Controllers\Student\MilestoneSubmissionController::class, 'store'])->name('milestones.submit');
     });
@@ -46,6 +46,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Submissions
         Route::get('/submissions', [App\Http\Controllers\DepartmentCoordinator\SubmissionController::class, 'index'])->name('submissions.index');
+        Route::get('/submissions/progress', [App\Http\Controllers\DepartmentCoordinator\SubmissionController::class, 'progress'])->name('submissions.progress');
         Route::get('/submissions/{submission}/download', [App\Http\Controllers\DepartmentCoordinator\SubmissionController::class, 'download'])->name('submissions.download');
         Route::post('/submissions/{submission}/grade', [App\Http\Controllers\DepartmentCoordinator\SubmissionController::class, 'grade'])->name('submissions.grade');
     });
@@ -69,6 +70,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/users/{user}/toggle', [App\Http\Controllers\SystemAdministrator\UserController::class, 'toggleActive'])->name('users.toggle');
         Route::post('/users/{user}/reset-password', [App\Http\Controllers\SystemAdministrator\UserController::class, 'resetPassword'])->name('users.reset-password');
     });
+
+    // Notifications
+    Route::post('/notifications/{id}/read', function (string $id) {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->notifications()->findOrFail($id)->markAsRead();
+        return back();
+    })->name('notifications.read');
+
+    Route::post('/notifications/read-all', function () {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->unreadNotifications->markAsRead();
+        return back();
+    })->name('notifications.read-all');
+
 });
 
 Route::middleware('auth')->group(function () {
@@ -78,16 +95,3 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
-
-// Notification routes (students)
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::post('/notifications/{id}/read', function (string $id) {
-        auth()->user()->notifications()->findOrFail($id)->markAsRead();
-        return back();
-    })->name('notifications.read');
-
-    Route::post('/notifications/read-all', function () {
-        auth()->user()->unreadNotifications->markAsRead();
-        return back();
-    })->name('notifications.read-all');
-});

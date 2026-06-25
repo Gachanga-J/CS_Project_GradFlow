@@ -32,9 +32,37 @@
                     @endif
 
                     @if ($milestone->deadline)
-                        <p class="text-xs text-gray-400">
+                        <p class="text-xs text-gray-400 mb-3">
                             Deadline: {{ $milestone->deadline->format('d M Y') }}
                         </p>
+
+                        @php
+                            $deadlineTs  = $milestone->deadline->endOfDay()->timestamp;
+                            $nowTs       = now()->timestamp;
+                            $secondsLeft = $deadlineTs - $nowTs;
+                        @endphp
+
+                        @if($milestone->status === 'open' && $secondsLeft > 0 && $secondsLeft <= 86400)
+                            <div id="countdown-wrapper"
+                                 class="flex items-center gap-3 mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                <p class="text-xs font-semibold text-red-700">
+                                    Due in: <span id="countdown" class="font-mono text-sm"></span>
+                                </p>
+                            </div>
+                        @elseif($milestone->status === 'open' && $secondsLeft <= 0)
+                            <div class="flex items-center gap-3 mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="8" x2="12" y2="12"/>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                                <p class="text-xs font-semibold text-red-700">This milestone is overdue!</p>
+                            </div>
+                        @endif
                     @endif
                 </div>
             </div>
@@ -150,6 +178,59 @@
                 </div>
             @endif
 
+            {{-- Version History --}}
+            @if($submissionHistory->count() > 1)
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <button onclick="document.getElementById('version-history').classList.toggle('hidden')"
+                                class="flex items-center justify-between w-full text-left">
+                            <h3 class="text-sm font-semibold text-gray-700">
+                                Submission History
+                                <span class="ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                                    {{ $submissionHistory->count() }} version{{ $submissionHistory->count() > 1 ? 's' : '' }}
+                                </span>
+                            </h3>
+                            <svg id="history-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+
+                        <div id="version-history" class="hidden mt-4 space-y-2">
+                            @foreach($submissionHistory as $version)
+                                <div class="flex items-center justify-between p-3 rounded-lg border
+                                    {{ $version->is_latest ? 'border-indigo-200 bg-indigo-50' : 'border-gray-100 bg-gray-50' }}">
+                                    <div class="flex items-center gap-3">
+                                        {{-- Version badge --}}
+                                        <span class="text-xs font-bold px-2 py-1 rounded
+                                            {{ $version->is_latest ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-200 text-gray-500' }}">
+                                            v{{ $version->version_number }}
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-700">{{ $version->file_name }}</p>
+                                            <p class="text-xs text-gray-400 mt-0.5">
+                                                {{ $version->submitted_at->format('d M Y, h:i A') }}
+                                                @if($version->file_size_bytes)
+                                                    · {{ number_format($version->file_size_bytes / 1024, 1) }} KB
+                                                @endif
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        @if($version->is_latest)
+                                            <span class="text-xs font-medium text-indigo-600">Latest</span>
+                                        @endif
+                                        <span style="padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600;
+                                            {{ $version->status === 'graded' ? 'background:#dcfce7; color:#15803d;' : ($version->status === 'supervisor_approved' ? 'background:#dbeafe; color:#1d4ed8;' : ($version->status === 'supervisor_rejected' ? 'background:#fee2e2; color:#dc2626;' : 'background:#fef9c3; color:#a16207;')) }}">
+                                            {{ ucfirst(str_replace('_', ' ', $version->status)) }}
+                                        </span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div>
                 <a href="{{ route('dashboard.student') }}"
                    class="text-sm text-indigo-600 hover:text-indigo-800">
@@ -161,75 +242,109 @@
     </div>
 
     <script>
+        // ── Countdown Timer ──────────────────────────────────────────
+        const countdownEl = document.getElementById('countdown');
+        if (countdownEl) {
+            const deadlineTs = {{ $milestone->deadline?->endOfDay()->timestamp ?? 0 }};
+
+            function updateCountdown() {
+                const secondsLeft = deadlineTs - Math.floor(Date.now() / 1000);
+
+                if (secondsLeft <= 0) {
+                    countdownEl.textContent = 'Deadline passed!';
+                    document.getElementById('countdown-wrapper').classList.add('animate-pulse');
+                    clearInterval(timer);
+                    return;
+                }
+
+                const h = Math.floor(secondsLeft / 3600);
+                const m = Math.floor((secondsLeft % 3600) / 60);
+                const s = secondsLeft % 60;
+
+                countdownEl.textContent =
+                    String(h).padStart(2, '0') + ':' +
+                    String(m).padStart(2, '0') + ':' +
+                    String(s).padStart(2, '0');
+            }
+
+            updateCountdown();
+            const timer = setInterval(updateCountdown, 1000);
+        }
+
+        // ── Version History Toggle Chevron ───────────────────────────
+        const historyBtn = document.querySelector('[onclick*="version-history"]');
+        if (historyBtn) {
+            historyBtn.addEventListener('click', () => {
+                const chevron = document.getElementById('history-chevron');
+                const isHidden = document.getElementById('version-history').classList.contains('hidden');
+                chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+                chevron.style.transition = 'transform 0.2s ease';
+            });
+        }
+
+        // ── Drag and Drop ────────────────────────────────────────────
         const dropzone   = document.getElementById('dropzone');
         const fileInput  = document.getElementById('file');
         const fileChosen = document.getElementById('file-chosen');
         const icon       = document.getElementById('dropzone-icon');
 
-        // Click on dropzone triggers file picker
-        dropzone.addEventListener('click', () => fileInput.click());
+        if (dropzone) {
+            dropzone.addEventListener('click', () => fileInput.click());
 
-        // Show filename when picked via click
-        fileInput.addEventListener('change', function () {
-            if (this.files[0]) showFile(this.files[0]);
-        });
+            fileInput.addEventListener('change', function () {
+                if (this.files[0]) showFile(this.files[0]);
+            });
 
-        // Drag over — highlight dropzone
-        dropzone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropzone.classList.add('border-indigo-400', 'bg-indigo-50');
-            icon.classList.add('text-indigo-400');
-            icon.classList.remove('text-gray-400');
-        });
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('border-indigo-400', 'bg-indigo-50');
+                icon.classList.add('text-indigo-400');
+                icon.classList.remove('text-gray-400');
+            });
 
-        // Drag leave — remove highlight
-        dropzone.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            dropzone.classList.remove('border-indigo-400', 'bg-indigo-50');
-            icon.classList.remove('text-indigo-400');
-            icon.classList.add('text-gray-400');
-        });
+            dropzone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('border-indigo-400', 'bg-indigo-50');
+                icon.classList.remove('text-indigo-400');
+                icon.classList.add('text-gray-400');
+            });
 
-        // Drop — assign file to input
-        dropzone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropzone.classList.remove('border-indigo-400', 'bg-indigo-50');
-            icon.classList.remove('text-indigo-400');
-            icon.classList.add('text-gray-400');
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('border-indigo-400', 'bg-indigo-50');
+                icon.classList.remove('text-indigo-400');
+                icon.classList.add('text-gray-400');
 
-            const file = e.dataTransfer.files[0];
-            if (!file) return;
+                const file = e.dataTransfer.files[0];
+                if (!file) return;
 
-            // Validate type
-            const allowed = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-            if (!allowed.includes(file.type)) {
-                fileChosen.textContent = '❌ Invalid file type. Please use PDF, DOC, or DOCX.';
-                fileChosen.style.color = '#dc2626';
-                return;
+                const allowed = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+                if (!allowed.includes(file.type)) {
+                    fileChosen.textContent = '❌ Invalid file type. Please use PDF, DOC, or DOCX.';
+                    fileChosen.style.color = '#dc2626';
+                    return;
+                }
+
+                if (file.size > 5 * 1024 * 1024) {
+                    fileChosen.textContent = '❌ File too large. Maximum size is 5MB.';
+                    fileChosen.style.color = '#dc2626';
+                    return;
+                }
+
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+                showFile(file);
+            });
+
+            function showFile(file) {
+                fileChosen.textContent = '✓ ' + file.name;
+                fileChosen.style.color = '#16a34a';
+                dropzone.classList.add('border-green-400', 'bg-green-50');
+                dropzone.classList.remove('border-gray-300');
+                icon.classList.add('text-green-400');
+                icon.classList.remove('text-gray-400');
             }
-
-            // Validate size (5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                fileChosen.textContent = '❌ File too large. Maximum size is 5MB.';
-                fileChosen.style.color = '#dc2626';
-                return;
-            }
-
-            // Assign to file input via DataTransfer
-            const dt = new DataTransfer();
-            dt.items.add(file);
-            fileInput.files = dt.files;
-
-            showFile(file);
-        });
-
-        function showFile(file) {
-            fileChosen.textContent = '✓ ' + file.name;
-            fileChosen.style.color = '#16a34a';
-            dropzone.classList.add('border-green-400', 'bg-green-50');
-            dropzone.classList.remove('border-gray-300');
-            icon.classList.add('text-green-400');
-            icon.classList.remove('text-gray-400');
         }
     </script>
 

@@ -77,7 +77,7 @@
 
             <a href="{{ route('department-coordinator.milestones.index') }}"
                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-               {{ request()->routeIs('department-coordinator.milestones.*') ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
+               {{ request()->routeIs('department-coordinator.milestones.index') ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M5 22V4"/><path d="M5 4h12l-3 5 3 5H5"/>
                 </svg>
@@ -97,7 +97,7 @@
 
             <a href="{{ route('department-coordinator.submissions.index') }}"
                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-               {{ request()->routeIs('department-coordinator.submissions.*') ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
+               {{ request()->routeIs('department-coordinator.submissions.index') ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M5 2h14"/><path d="M5 22h14"/>
                     <path d="M17 2v4.5a2 2 0 0 1-.586 1.414L12 12l4.414 4.086A2 2 0 0 1 17 17.5V22"/>
@@ -105,9 +105,17 @@
                 </svg>
                 Review Submissions
             </a>
-        @endif
 
-        {{-- Student — no extra nav links needed, everything is on the dashboard --}}
+            <a href="{{ route('department-coordinator.submissions.progress') }}"
+               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+               {{ request()->routeIs('department-coordinator.submissions.progress') ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <path d="M3 9h18M9 21V9"/>
+                </svg>
+                Student Progress
+            </a>
+        @endif
 
     </nav>
 
