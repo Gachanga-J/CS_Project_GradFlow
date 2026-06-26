@@ -25,22 +25,20 @@
                 $gradedCount        = $submissionMap->filter(fn($s) => $s->status === 'graded')->count();
                 $progressPercent    = $totalMilestones > 0 ? round(($submittedCount / $totalMilestones) * 100) : 0;
 
-                // Urgent milestones (deadline within 3 days, not graded)
+                // Urgent milestones (deadline within 3 days, not yet submitted)
                 $urgentMilestones = $milestones->filter(function ($m) use ($submissionMap) {
                     if ($m->status !== 'open' || !$m->deadline) return false;
                     $daysLeft = (int) now()->startOfDay()->diffInDays($m->deadline, false);
                     if ($daysLeft > 3 || $daysLeft < 0) return false;
-                    $submission = $submissionMap->get($m->id);
-                    return !$submission || $submission->status !== 'graded';
+                    return ! $submissionMap->has($m->id);
                 });
 
-                // Overdue milestones (deadline passed, not graded)
+                // Overdue milestones (deadline passed, not yet submitted)
                 $overdueMilestones = $milestones->filter(function ($m) use ($submissionMap) {
                     if ($m->status !== 'open' || !$m->deadline) return false;
                     $daysLeft = (int) now()->startOfDay()->diffInDays($m->deadline, false);
                     if ($daysLeft >= 0) return false;
-                    $submission = $submissionMap->get($m->id);
-                    return !$submission || $submission->status !== 'graded';
+                    return ! $submissionMap->has($m->id);
                 });
             @endphp
 
@@ -168,14 +166,14 @@
                                         ? (int) now()->startOfDay()->diffInDays($milestone->deadline, false)
                                         : null;
 
-                                    $isOverdue = $daysLeft !== null && $daysLeft < 0 && $milestone->status === 'open';
-                                    $isUrgent  = $daysLeft !== null && $daysLeft >= 0 && $daysLeft <= 3 && $milestone->status === 'open';
+                                    $isOverdue = $daysLeft !== null && $daysLeft < 0 && $milestone->status === 'open' && ! $submission;
+                                    $isUrgent  = $daysLeft !== null && $daysLeft >= 0 && $daysLeft <= 3 && $milestone->status === 'open' && ! $submission;
                                 @endphp
 
                                 <div class="flex items-center justify-between p-4 border rounded-lg
-                                    @if($isOverdue && (!$submission || $submission->status !== 'graded'))
+                                    @if($isOverdue)
                                         border-red-300 bg-red-50
-                                    @elseif($isUrgent && (!$submission || $submission->status !== 'graded'))
+                                    @elseif($isUrgent)
                                         border-orange-300 bg-orange-50
                                     @elseif($submission?->status === 'graded') border-green-200 bg-green-50
                                     @elseif($submission?->status === 'supervisor_approved') border-blue-200 bg-blue-50
@@ -188,9 +186,9 @@
                                     <div>
                                         <p class="font-medium text-gray-800 text-sm flex items-center gap-2">
                                             {{ $milestone->sequence_order }}. {{ $milestone->title }}
-                                            @if($isOverdue && (!$submission || $submission->status !== 'graded'))
+                                            @if($isOverdue)
                                                 <span class="text-xs font-semibold text-red-600">● Overdue</span>
-                                            @elseif($isUrgent && (!$submission || $submission->status !== 'graded'))
+                                            @elseif($isUrgent)
                                                 <span class="text-xs font-semibold text-orange-600">
                                                     ● {{ $daysLeft === 0 ? 'Due today' : "Due in {$daysLeft} day" . ($daysLeft > 1 ? 's' : '') }}
                                                 </span>
@@ -210,8 +208,8 @@
 
                                     <div class="flex items-center gap-3">
                                         <span class="px-3 py-1 rounded-full text-xs font-medium
-                                            @if($isOverdue && (!$submission || $submission->status !== 'graded')) bg-red-100 text-red-700
-                                            @elseif($isUrgent && (!$submission || $submission->status !== 'graded')) bg-orange-100 text-orange-700
+                                            @if($isOverdue) bg-red-100 text-red-700
+                                            @elseif($isUrgent) bg-orange-100 text-orange-700
                                             @elseif($submission?->status === 'graded') bg-green-100 text-green-700
                                             @elseif($submission?->status === 'supervisor_approved') bg-blue-100 text-blue-700
                                             @elseif($submission?->status === 'supervisor_rejected') bg-red-100 text-red-700

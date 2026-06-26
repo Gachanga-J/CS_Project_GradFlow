@@ -323,7 +323,10 @@
         const icon       = document.getElementById('dropzone-icon');
 
         if (dropzone) {
-            dropzone.addEventListener('click', () => fileInput.click());
+            dropzone.addEventListener('click', (e) => {
+                if (e.target.closest('label') || e.target === fileInput) return;
+                fileInput.click();
+            });
 
             fileInput.addEventListener('change', function () {
                 if (this.files[0]) showFile(this.files[0]);
