@@ -14,6 +14,12 @@
                 </div>
             @endif
 
+            @if (session('warning'))
+                <div class="p-4 bg-orange-100 text-orange-700 rounded border border-orange-300">
+                    ⚠️ {{ session('warning') }}
+                </div>
+            @endif
+
             {{-- Milestone Details --}}
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
@@ -74,7 +80,14 @@
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Your Submission</h3>
 
                         <div class="p-4 border rounded-lg border-gray-200 bg-gray-50 mb-4">
-                            <p class="text-sm font-medium text-gray-700">{{ $submission->file_name }}</p>
+                            <div class="flex items-center gap-2">
+                                <p class="text-sm font-medium text-gray-700">{{ $submission->file_name }}</p>
+                                @if($submission->submitted_late)
+                                    <span style="padding:2px 8px; border-radius:999px; font-size:10px; font-weight:700; background:#fef3c7; color:#b45309; border:1px solid #fcd34d;">
+                                        ⚠ Late
+                                    </span>
+                                @endif
+                            </div>
                             <p class="text-xs text-gray-400 mt-1">
                                 Version {{ $submission->version_number }} —
                                 Submitted {{ $submission->submitted_at->format('d M Y, h:i A') }}
@@ -111,6 +124,23 @@
                                 @endif
                             </div>
                         @endif
+                    </div>
+                </div>
+            @endif
+
+            {{-- Late submission warning before upload form --}}
+            @if($isLate && $milestone->status === 'open' && ($submission === null || $submission->status !== 'graded'))
+                <div class="flex items-start gap-3 p-4 bg-orange-50 border border-orange-300 rounded-lg">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 shrink-0">
+                        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <div>
+                        <p class="text-sm font-semibold text-orange-700">You are submitting after the deadline</p>
+                        <p class="text-xs text-orange-600 mt-0.5">
+                            The deadline was {{ $milestone->deadline->format('d M Y') }}.
+                            Your submission will be marked as <strong>late</strong> and the coordinator will be notified.
+                        </p>
                     </div>
                 </div>
             @endif
@@ -161,8 +191,9 @@
                                     Cancel
                                 </a>
                                 <button type="submit"
-                                        style="font-size:14px; font-weight:600; padding:8px 20px; border-radius:6px; border:2px solid #3730a3; background:#4f46e5; color:white; cursor:pointer;">
-                                    {{ $submission ? 'Resubmit Milestone' : 'Submit Milestone' }}
+                                        style="font-size:14px; font-weight:600; padding:8px 20px; border-radius:6px;
+                                        {{ $isLate ? 'border:2px solid #d97706; background:#f59e0b; color:white;' : 'border:2px solid #3730a3; background:#4f46e5; color:white;' }} cursor:pointer;">
+                                    {{ $isLate ? '⚠ Submit Late' : ($submission ? 'Resubmit Milestone' : 'Submit Milestone') }}
                                 </button>
                             </div>
                         </form>
@@ -200,13 +231,19 @@
                                 <div class="flex items-center justify-between p-3 rounded-lg border
                                     {{ $version->is_latest ? 'border-indigo-200 bg-indigo-50' : 'border-gray-100 bg-gray-50' }}">
                                     <div class="flex items-center gap-3">
-                                        {{-- Version badge --}}
                                         <span class="text-xs font-bold px-2 py-1 rounded
                                             {{ $version->is_latest ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-200 text-gray-500' }}">
                                             v{{ $version->version_number }}
                                         </span>
                                         <div>
-                                            <p class="text-sm font-medium text-gray-700">{{ $version->file_name }}</p>
+                                            <div class="flex items-center gap-2">
+                                                <p class="text-sm font-medium text-gray-700">{{ $version->file_name }}</p>
+                                                @if($version->submitted_late)
+                                                    <span style="padding:1px 6px; border-radius:999px; font-size:10px; font-weight:700; background:#fef3c7; color:#b45309; border:1px solid #fcd34d;">
+                                                        ⚠ Late
+                                                    </span>
+                                                @endif
+                                            </div>
                                             <p class="text-xs text-gray-400 mt-0.5">
                                                 {{ $version->submitted_at->format('d M Y, h:i A') }}
                                                 @if($version->file_size_bytes)
@@ -249,18 +286,15 @@
 
             function updateCountdown() {
                 const secondsLeft = deadlineTs - Math.floor(Date.now() / 1000);
-
                 if (secondsLeft <= 0) {
                     countdownEl.textContent = 'Deadline passed!';
                     document.getElementById('countdown-wrapper').classList.add('animate-pulse');
                     clearInterval(timer);
                     return;
                 }
-
                 const h = Math.floor(secondsLeft / 3600);
                 const m = Math.floor((secondsLeft % 3600) / 60);
                 const s = secondsLeft % 60;
-
                 countdownEl.textContent =
                     String(h).padStart(2, '0') + ':' +
                     String(m).padStart(2, '0') + ':' +
@@ -271,13 +305,13 @@
             const timer = setInterval(updateCountdown, 1000);
         }
 
-        // ── Version History Toggle Chevron ───────────────────────────
+        // ── Version History Toggle ───────────────────────────────────
         const historyBtn = document.querySelector('[onclick*="version-history"]');
         if (historyBtn) {
             historyBtn.addEventListener('click', () => {
-                const chevron = document.getElementById('history-chevron');
+                const chevron  = document.getElementById('history-chevron');
                 const isHidden = document.getElementById('version-history').classList.contains('hidden');
-                chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+                chevron.style.transform  = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
                 chevron.style.transition = 'transform 0.2s ease';
             });
         }

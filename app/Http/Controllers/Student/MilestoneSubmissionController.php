@@ -16,13 +16,11 @@ class MilestoneSubmissionController extends Controller
 
         abort_if($milestone->department_id !== $user->department_id, 403);
 
-        // Auto-mark any unread notifications about this specific milestone as read
+        // Auto-mark any unread notifications about this milestone as read
         $user->unreadNotifications()
             ->whereJsonContains('data->milestone_id', $milestone->id)
             ->get()
-            ->each(function ($notification) {
-                $notification->markAsRead();
-            });
+            ->each(fn($n) => $n->markAsRead());
 
         $student = $user->student;
 
@@ -31,13 +29,17 @@ class MilestoneSubmissionController extends Controller
             ->where('is_latest', true)
             ->first();
 
-        // All versions for history
         $submissionHistory = MilestoneSubmission::where('milestone_id', $milestone->id)
             ->where('student_id', $student->id)
             ->orderBy('version_number', 'desc')
             ->get();
 
-        return view('student.milestones.show', compact('milestone', 'submission', 'submissionHistory'));
+        // Is the deadline already passed?
+        $isLate = $milestone->deadline && now()->startOfDay()->gt($milestone->deadline);
+
+        return view('student.milestones.show', compact(
+            'milestone', 'submission', 'submissionHistory', 'isLate'
+        ));
     }
 
     public function store(Request $request, Milestone $milestone)
@@ -52,6 +54,9 @@ class MilestoneSubmissionController extends Controller
         ]);
 
         $student = $user->student;
+
+        // Detect late submission
+        $submittedLate = $milestone->deadline && now()->startOfDay()->gt($milestone->deadline);
 
         $latestVersion = MilestoneSubmission::where('milestone_id', $milestone->id)
             ->where('student_id', $student->id)
@@ -80,9 +85,14 @@ class MilestoneSubmissionController extends Controller
             'is_latest'       => true,
             'status'          => 'submitted',
             'submitted_at'    => now(),
+            'submitted_late'  => $submittedLate,
         ]);
 
+        $message = $submittedLate
+            ? 'Submission uploaded, but it was submitted after the deadline.'
+            : 'Submission uploaded successfully!';
+
         return redirect()->route('student.milestones.show', $milestone)
-            ->with('success', 'Submission uploaded successfully!');
+            ->with($submittedLate ? 'warning' : 'success', $message);
     }
 }

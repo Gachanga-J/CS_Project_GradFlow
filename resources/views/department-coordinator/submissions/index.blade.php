@@ -15,7 +15,6 @@
             @endif
 
             @php
-                // Total students in this coordinator's department
                 $totalStudents = \App\Models\User::where('role', 'student')
                     ->where('department_id', auth()->user()->department_id)
                     ->count();
@@ -27,6 +26,7 @@
                     $submittedCount   = $submissions->count();
                     $gradedCount      = $submissions->where('status', 'graded')->count();
                     $pendingCount     = $submissions->whereIn('status', ['submitted', 'supervisor_approved'])->count();
+                    $lateCount        = $submissions->where('submitted_late', true)->count();
                     $notSubmitted     = max(0, $totalStudents - $submittedCount);
                     $submitPercent    = $totalStudents > 0 ? round(($submittedCount / $totalStudents) * 100) : 0;
                     $gradePercent     = $totalStudents > 0 ? round(($gradedCount / $totalStudents) * 100) : 0;
@@ -54,8 +54,6 @@
 
                         {{-- Submission Stats --}}
                         <div class="mb-5 p-4 bg-gray-50 border border-gray-100 rounded-lg">
-
-                            {{-- Stats row --}}
                             <div class="flex flex-wrap gap-4 mb-3">
                                 <div class="flex items-center gap-1.5">
                                     <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
@@ -73,30 +71,30 @@
                                     <span class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
                                     <span class="text-xs text-gray-600 font-medium">{{ $notSubmitted }} not submitted</span>
                                 </div>
+                                @if($lateCount > 0)
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-orange-400"></span>
+                                        <span class="text-xs text-orange-600 font-medium">{{ $lateCount }} late</span>
+                                    </div>
+                                @endif
                             </div>
 
                             {{-- Stacked progress bar --}}
                             <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden flex">
-                                {{-- Graded portion --}}
                                 @if($gradePercent > 0)
                                     <div class="h-2.5 bg-green-500 transition-all duration-500"
-                                         style="width: {{ $gradePercent }}%"
-                                         title="{{ $gradedCount }} graded"></div>
+                                         style="width: {{ $gradePercent }}%"></div>
                                 @endif
-                                {{-- Submitted but not graded --}}
                                 @php $submittedOnlyPercent = $submitPercent - $gradePercent; @endphp
                                 @if($submittedOnlyPercent > 0)
                                     <div class="h-2.5 bg-indigo-400 transition-all duration-500"
-                                         style="width: {{ $submittedOnlyPercent }}%"
-                                         title="{{ $pendingCount }} submitted, awaiting grade"></div>
+                                         style="width: {{ $submittedOnlyPercent }}%"></div>
                                 @endif
-                                {{-- Remaining (not submitted) fills the rest automatically --}}
                             </div>
 
                             <div class="flex justify-between mt-1">
                                 <span class="text-xs text-gray-400">0%</span>
-                                <span class="text-xs font-semibold
-                                    {{ $submitPercent === 100 ? 'text-green-600' : 'text-gray-500' }}">
+                                <span class="text-xs font-semibold {{ $submitPercent === 100 ? 'text-green-600' : 'text-gray-500' }}">
                                     {{ $submitPercent }}% submitted
                                 </span>
                                 <span class="text-xs text-gray-400">100%</span>
@@ -118,15 +116,27 @@
 
                                         <div class="flex items-start justify-between gap-4">
                                             <div>
-                                                <p class="font-semibold text-gray-800 text-sm">
-                                                    {{ $submission->student->user->full_name }}
-                                                </p>
+                                                <div class="flex items-center gap-2">
+                                                    <p class="font-semibold text-gray-800 text-sm">
+                                                        {{ $submission->student->user->full_name }}
+                                                    </p>
+                                                    @if($submission->submitted_late)
+                                                        <span style="padding:2px 8px; border-radius:999px; font-size:10px; font-weight:700; background:#fef3c7; color:#b45309; border:1px solid #fcd34d;">
+                                                            ⚠ Late Submission
+                                                        </span>
+                                                    @endif
+                                                </div>
                                                 <p class="text-xs text-gray-500 mt-1">
                                                     {{ $submission->student->reg_number }}
                                                 </p>
                                                 <p class="text-xs text-gray-400 mt-1">
                                                     Submitted: {{ $submission->submitted_at->format('d M Y, h:i A') }}
                                                     — Version {{ $submission->version_number }}
+                                                    @if($submission->submitted_late && $milestone->deadline)
+                                                        <span class="text-orange-500 font-medium">
+                                                            ({{ $milestone->deadline->diffInDays($submission->submitted_at) }} day{{ $milestone->deadline->diffInDays($submission->submitted_at) > 1 ? 's' : '' }} late)
+                                                        </span>
+                                                    @endif
                                                 </p>
 
                                                 {{-- Supervisor Status --}}
@@ -168,7 +178,6 @@
 
                                         {{-- Actions --}}
                                         <div class="mt-4 flex flex-wrap items-center gap-3">
-
                                             <a href="{{ route('department-coordinator.submissions.download', $submission) }}"
                                                style="font-size:13px; font-weight:600; padding:6px 16px; border-radius:6px; border:2px solid #6b7280; background:white; color:#374151; text-decoration:none;">
                                                 Download File
@@ -214,13 +223,11 @@
                                                     </button>
                                                 </form>
                                             @endif
-
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
                         @endif
-
                     </div>
                 </div>
             @empty

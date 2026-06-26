@@ -24,65 +24,25 @@ class MilestoneSubmission extends Model
         'admin_feedback',
         'grade',
         'submitted_at',
+        'submitted_late',
     ];
 
     protected function casts(): array
     {
         return [
-            'submitted_at' => 'datetime',
-            'is_latest'    => 'boolean',
-            'grade'        => 'integer',
+            'submitted_at'   => 'datetime',
+            'is_latest'      => 'boolean',
+            'submitted_late' => 'boolean',
         ];
     }
 
-    /**
-     * The milestone this submission belongs to.
-     */
     public function milestone(): BelongsTo
     {
         return $this->belongsTo(Milestone::class);
     }
 
-    /**
-     * The student who made this submission.
-     */
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
-    }
-
-    /**
-     * Get human-readable file size.
-     */
-    public function getFileSizeFormattedAttribute(): string
-    {
-        $bytes = $this->file_size_bytes;
-        if ($bytes < 1024) return "{$bytes} B";
-        if ($bytes < 1048576) return round($bytes / 1024, 1) . ' KB';
-        return round($bytes / 1048576, 1) . ' MB';
-    }
-
-    /**
-     * Check if approved by supervisor.
-     */
-    public function isSupervisorApproved(): bool
-    {
-        return $this->status === 'supervisor_approved';
-    }
-
-    /**
-     * Check if rejected by supervisor.
-     */
-    public function isSupervisorRejected(): bool
-    {
-        return $this->status === 'supervisor_rejected';
-    }
-
-    /**
-     * Check if graded by admin.
-     */
-    public function isGraded(): bool
-    {
-        return $this->status === 'graded';
     }
 }
