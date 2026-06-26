@@ -134,7 +134,7 @@
                                                     — Version {{ $submission->version_number }}
                                                     @if($submission->submitted_late && $milestone->deadline)
                                                         <span class="text-orange-500 font-medium">
-                                                            ({{ $milestone->deadline->diffInDays($submission->submitted_at) }} day{{ $milestone->deadline->diffInDays($submission->submitted_at) > 1 ? 's' : '' }} late)
+                                                            ({{ round($milestone->deadline->diffInDays($submission->submitted_at)) }} day{{ $milestone->deadline->diffInDays($submission->submitted_at) > 1 ? 's' : '' }} late)
                                                         </span>
                                                     @endif
                                                 </p>
