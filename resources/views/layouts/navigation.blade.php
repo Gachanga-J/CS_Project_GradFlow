@@ -30,8 +30,11 @@
                                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                             </svg>
                             @if($unread->count() > 0)
-                                <span class="absolute top-1 right-1 h-4 w-4 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                                    {{ $unread->count() > 9 ? '9+' : $unread->count() }}
+                                <span class="absolute top-1 right-1 flex h-4 w-4">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span class="relative inline-flex h-4 w-4 bg-red-500 text-white text-xs font-bold rounded-full items-center justify-center">
+                                        {{ $unread->count() > 9 ? '9+' : $unread->count() }}
+                                    </span>
                                 </span>
                             @endif
                         </button>
@@ -102,6 +105,14 @@
                                         No notifications yet.
                                     </div>
                                 @endforelse
+                            </div>
+
+                            {{-- View all --}}
+                            <div class="px-4 py-3 border-t border-gray-100 dark:border-gray-700 text-center">
+                                <a href="{{ route('notifications.index') }}"
+                                   class="text-xs font-medium text-indigo-600 hover:text-indigo-800">
+                                    View all notifications →
+                                </a>
                             </div>
 
                         </div>

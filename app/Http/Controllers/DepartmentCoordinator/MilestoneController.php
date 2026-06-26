@@ -4,6 +4,7 @@ namespace App\Http\Controllers\DepartmentCoordinator;
 
 use App\Http\Controllers\Controller;
 use App\Models\Milestone;
+use App\Services\DeadlineReminderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -94,5 +95,12 @@ class MilestoneController extends Controller
 
         return redirect()->route('department-coordinator.milestones.index')
             ->with('success', 'Milestone deleted.');
+    }
+
+    public function sendReminders(DeadlineReminderService $reminderService)
+    {
+        $sent = $reminderService->sendAll($this->departmentId());
+
+        return back()->with('success', "Sent {$sent} reminder notification(s) to students in your department.");
     }
 }

@@ -43,6 +43,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/milestones/{milestone}', [App\Http\Controllers\DepartmentCoordinator\MilestoneController::class, 'update'])->name('milestones.update');
         Route::post('/milestones/{milestone}/toggle', [App\Http\Controllers\DepartmentCoordinator\MilestoneController::class, 'toggleStatus'])->name('milestones.toggle');
         Route::delete('/milestones/{milestone}', [App\Http\Controllers\DepartmentCoordinator\MilestoneController::class, 'destroy'])->name('milestones.destroy');
+        Route::post('/milestones/send-reminders', [App\Http\Controllers\DepartmentCoordinator\MilestoneController::class, 'sendReminders'])->name('milestones.send-reminders');
 
         // Submissions
         Route::get('/submissions', [App\Http\Controllers\DepartmentCoordinator\SubmissionController::class, 'index'])->name('submissions.index');
@@ -72,6 +73,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Notifications
+    Route::get('/notifications', function () {
+        $notifications = Auth::user()->notifications()->latest()->paginate(15);
+
+        return view('notifications.index', compact('notifications'));
+    })->name('notifications.index');
+
     Route::post('/notifications/{id}/read', function (string $id) {
         /** @var \App\Models\User $user */
         $user = Auth::user();
