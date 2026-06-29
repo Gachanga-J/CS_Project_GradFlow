@@ -1,133 +1,92 @@
 <?php
 
-namespace App\Http\Controllers\Supervisor;
+namespace App\Models;
 
-use App\Http\Controllers\Controller;
-use App\Models\MilestoneSubmission;
-use App\Models\Milestone;
-use App\Notifications\SubmissionReviewed;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-/**
- * @method \Illuminate\Notifications\DatabaseNotificationCollection notifications()
- * @method \Illuminate\Notifications\DatabaseNotificationCollection unreadNotifications()
- */
 #[Fillable(['first_name', 'last_name', 'email', 'password', 'role', 'department_id', 'is_active'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
-    private function supervisorId(): int
+    /** @use HasFactory<UserFactory> */
+    use HasFactory, Notifiable;
+
+    protected function casts(): array
     {
-        return Auth::user()->supervisor->id;
+        return [
+            'email_verified_at' => 'datetime',
+            'password'          => 'hashed',
+            'is_active'         => 'boolean',
+        ];
     }
 
-    /**
-     * The department this user belongs to (nullable for system administrators).
-     */
-    public function index()
+    public function department(): BelongsTo
     {
-        $supervisor = Auth::user()->supervisor->load(['projects.student.user', 'projects.student.milestoneSubmissions' => function ($q) {
-            $q->where('is_latest', true)->with('milestone');
-        }]);
-
-        return view('supervisor.submissions.index', compact('supervisor'));
+        return $this->belongsTo(Department::class);
     }
 
-    /**
-     * Approve a submission. Only allowed when:
-     * - submission belongs to a student supervised by this supervisor
-     * - submission is in 'submitted' status
-     */
-    public function approve(Request $request, MilestoneSubmission $submission)
+    public function student(): HasOne
     {
-        $this->authorizeSubmission($submission);
-
-        abort_if($submission->status !== 'submitted', 422, 'Only pending submissions can be approved.');
-
-        $request->validate([
-            'supervisor_feedback' => ['nullable', 'string', 'max:1000'],
-        ]);
-
-        $submission->update([
-            'status'              => 'supervisor_approved',
-            'supervisor_feedback' => $request->supervisor_feedback,
-        ]);
-
-        // Notify student
-        $submission->student->user->notify(new SubmissionReviewed($submission, 'approved'));
-
-        return back()->with('success', 'Submission approved.');
+        return $this->hasOne(Student::class);
     }
 
-    /**
-     * Reject a submission.
-     */
-    public function reject(Request $request, MilestoneSubmission $submission)
+    public function supervisor(): HasOne
     {
-        $this->authorizeSubmission($submission);
-
-        abort_if($submission->status !== 'submitted', 422, 'Only pending submissions can be rejected.');
-
-        $request->validate([
-            'supervisor_feedback' => ['required', 'string', 'max:1000'],
-        ]);
-
-        $submission->update([
-            'status'              => 'supervisor_rejected',
-            'supervisor_feedback' => $request->supervisor_feedback,
-        ]);
-
-        // Notify student
-        $submission->student->user->notify(new SubmissionReviewed($submission, 'rejected'));
-
-        return back()->with('success', 'Submission rejected.');
+        return $this->hasOne(Supervisor::class);
     }
 
-    /**
-     * Download the submission file.
-     */
-    public function download(MilestoneSubmission $submission)
+    public function isStudent(): bool
     {
-        $this->authorizeSubmission($submission);
-
-        $fullPath = storage_path('app/private/' . $submission->file_path);
-        abort_if(!file_exists($fullPath), 404, 'File not found.');
-
-        return response()->download($fullPath, $submission->file_name);
+        return $this->role === 'student';
     }
 
-    /**
-     * Ensure the submission belongs to a student assigned to this supervisor.
-     */
-    private function authorizeSubmission(MilestoneSubmission $submission): void
+    public function isSupervisor(): bool
     {
-        return match ($this->role) {
-            'student' => 'dashboard.student',
-            'supervisor' => 'dashboard.supervisor',
-            'department_coordinator' => 'dashboard.department-coordinator',
-            'system_administrator' => 'dashboard.system-administrator',
-            default => 'login',
-        };
+        return $this->role === 'supervisor';
     }
 
-        $valid = $submission->student->projects()
-            ->where('supervisor_id', $supervisorId)
-            ->exists();
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, ['system_administrator', 'department_coordinator']);
+    }
 
-    /**
-     * Check if the user is a department coordinator.
-     */
+    public function isSystemAdministrator(): bool
+    {
+        return $this->role === 'system_administrator';
+    }
+
     public function isDepartmentCoordinator(): bool
     {
         return $this->role === 'department_coordinator';
     }
 
-    /**
-     * Check if the user is a system administrator.
-     */
-    public function isSystemAdministrator(): bool
+    public function dashboardRoute(): string
     {
-        return $this->role === 'system_administrator';
+        return match ($this->role) {
+            'student'                => 'dashboard.student',
+            'supervisor'             => 'dashboard.supervisor',
+            'department_coordinator' => 'dashboard.department-coordinator',
+            'system_administrator'   => 'dashboard.system-administrator',
+            default                  => 'login',
+        };
+    }
+
+    public function getFullNameAttribute(): string
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
+
+    public static function generateEmail(string $firstName, string $lastName, string $roleSuffix): string
+    {
+        $normalized = strtolower(preg_replace('/[^A-Za-z]/', '', $firstName . $lastName));
+        return "{$normalized}.{$roleSuffix}@gradflow.com";
     }
 }
