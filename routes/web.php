@@ -80,7 +80,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/users', [App\Http\Controllers\SystemAdministrator\UserController::class, 'index'])->name('users.index');
         Route::get('/users/create', [App\Http\Controllers\SystemAdministrator\UserController::class, 'create'])->name('users.create');
         Route::post('/users', [App\Http\Controllers\SystemAdministrator\UserController::class, 'store'])->name('users.store');
-        Route::get('/users/{user}/edit', [App\Http\Controllers\SystemAdministrator\UserController::class, 'edit'])->name('users.edit');
+        Route::get('/users/{user}/edit', [App\Http\Controllers\SystemAdministrator\DepartmentController::class, 'edit'])->name('users.edit');
         Route::put('/users/{user}', [App\Http\Controllers\SystemAdministrator\UserController::class, 'update'])->name('users.update');
         Route::post('/users/{user}/toggle', [App\Http\Controllers\SystemAdministrator\UserController::class, 'toggleActive'])->name('users.toggle');
         Route::post('/users/{user}/reset-password', [App\Http\Controllers\SystemAdministrator\UserController::class, 'resetPassword'])->name('users.reset-password');
@@ -92,15 +92,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // ── Notifications ─────────────────────────────────────────────────────────
-    Route::post('/notifications/{id}/read', function (string $id) {
-        auth()->user()->notifications()->findOrFail($id)->markAsRead();
-        return back();
-    })->name('notifications.read');
+    Route::prefix('notifications')->name('notifications.')->middleware('role:student')->group(function () {
+        Route::get('/', function () {
+            $notifications = auth()->user()->notifications()->latest()->paginate(20);
+            return view('notifications.index', compact('notifications'));
+        })->name('index');
 
-    Route::post('/notifications/read-all', function () {
-        auth()->user()->unreadNotifications->markAsRead();
-        return back();
-    })->name('notifications.read-all');
+        Route::post('/{id}/read', function (string $id) {
+            auth()->user()->notifications()->findOrFail($id)->markAsRead();
+            return back();
+        })->name('read');
+
+        Route::post('/read-all', function () {
+            auth()->user()->unreadNotifications->markAsRead();
+            return back();
+        })->name('read-all');
+    });
 
 });
 
