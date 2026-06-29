@@ -9,7 +9,13 @@ use App\Notifications\SubmissionReviewed;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class SubmissionController extends Controller
+/**
+ * @method \Illuminate\Notifications\DatabaseNotificationCollection notifications()
+ * @method \Illuminate\Notifications\DatabaseNotificationCollection unreadNotifications()
+ */
+#[Fillable(['first_name', 'last_name', 'email', 'password', 'role', 'department_id', 'is_active'])]
+#[Hidden(['password', 'remember_token'])]
+class User extends Authenticatable implements MustVerifyEmail
 {
     private function supervisorId(): int
     {
@@ -17,8 +23,7 @@ class SubmissionController extends Controller
     }
 
     /**
-     * List all latest submissions for students assigned to this supervisor,
-     * grouped by project then milestone.
+     * The department this user belongs to (nullable for system administrators).
      */
     public function index()
     {
@@ -97,12 +102,32 @@ class SubmissionController extends Controller
      */
     private function authorizeSubmission(MilestoneSubmission $submission): void
     {
-        $supervisorId = $this->supervisorId();
+        return match ($this->role) {
+            'student' => 'dashboard.student',
+            'supervisor' => 'dashboard.supervisor',
+            'department_coordinator' => 'dashboard.department-coordinator',
+            'system_administrator' => 'dashboard.system-administrator',
+            default => 'login',
+        };
+    }
 
         $valid = $submission->student->projects()
             ->where('supervisor_id', $supervisorId)
             ->exists();
 
-        abort_unless($valid, 403, 'This submission does not belong to one of your students.');
+    /**
+     * Check if the user is a department coordinator.
+     */
+    public function isDepartmentCoordinator(): bool
+    {
+        return $this->role === 'department_coordinator';
+    }
+
+    /**
+     * Check if the user is a system administrator.
+     */
+    public function isSystemAdministrator(): bool
+    {
+        return $this->role === 'system_administrator';
     }
 }

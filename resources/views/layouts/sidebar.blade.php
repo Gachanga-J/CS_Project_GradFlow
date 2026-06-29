@@ -11,7 +11,6 @@
         <span class="inline-block mt-2 text-xs font-medium px-2 py-0.5 rounded-full
             @if($role === 'system_administrator') bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300
             @elseif($role === 'department_coordinator') bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300
-            @elseif($role === 'supervisor') bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300
             @elseif($role === 'student') bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300
             @endif">
             {{ ucfirst(str_replace('_', ' ', $role)) }}
@@ -70,47 +69,15 @@
                 </svg>
                 New User
             </a>
-
-            <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Configuration</p>
-
-            <a href="{{ route('system-administrator.tags.index') }}"
-               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-               {{ request()->routeIs('system-administrator.tags.*') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-                    <circle cx="7" cy="7" r="1.5"/>
-                </svg>
-                Research Tags
-            </a>
         @endif
 
         {{-- Department Coordinator --}}
         @if($role === 'department_coordinator')
-            <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Projects</p>
-
-            <a href="{{ route('department-coordinator.projects.index') }}"
-               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-               {{ request()->routeIs('department-coordinator.projects.*') ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                </svg>
-                Projects
-            </a>
-
-            <a href="{{ route('department-coordinator.projects.create') }}"
-               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-               {{ request()->routeIs('department-coordinator.projects.create') ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
-                </svg>
-                New Project
-            </a>
-
             <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Milestones</p>
 
             <a href="{{ route('department-coordinator.milestones.index') }}"
                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-               {{ request()->routeIs('department-coordinator.milestones.*') ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
+               {{ request()->routeIs('department-coordinator.milestones.index') ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M5 22V4"/><path d="M5 4h12l-3 5 3 5H5"/>
                 </svg>
@@ -130,7 +97,7 @@
 
             <a href="{{ route('department-coordinator.submissions.index') }}"
                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-               {{ request()->routeIs('department-coordinator.submissions.*') ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
+               {{ request()->routeIs('department-coordinator.submissions.index') ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M5 2h14"/><path d="M5 22h14"/>
                     <path d="M17 2v4.5a2 2 0 0 1-.586 1.414L12 12l4.414 4.086A2 2 0 0 1 17 17.5V22"/>
@@ -138,60 +105,15 @@
                 </svg>
                 Review Submissions
             </a>
-        @endif
 
-        {{-- Supervisor --}}
-        @if($role === 'supervisor')
-            <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">My Students</p>
-
-            <a href="{{ route('supervisor.students.index') }}"
+            <a href="{{ route('department-coordinator.submissions.progress') }}"
                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-               {{ request()->routeIs('supervisor.students.*') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
+               {{ request()->routeIs('department-coordinator.submissions.progress') ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="7" r="4"/>
-                    <path d="M5.5 21a8.38 8.38 0 0 1 13 0"/>
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <path d="M3 9h18M9 21V9"/>
                 </svg>
-                Students & Projects
-            </a>
-
-            <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Submissions</p>
-
-            <a href="{{ route('supervisor.submissions.index') }}"
-               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-               {{ request()->routeIs('supervisor.submissions.*') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-                </svg>
-                Review Submissions
-            </a>
-
-            <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Profile</p>
-
-            <a href="{{ route('supervisor.profile.edit') }}"
-               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-               {{ request()->routeIs('supervisor.profile.*') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-                    <circle cx="7" cy="7" r="1.5"/>
-                </svg>
-                Research Interests
-            </a>
-        @endif
-
-        {{-- Student --}}
-        @if($role === 'student')
-            <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Supervisors</p>
-
-            <a href="{{ route('student.supervisor-matches') }}"
-               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-               {{ request()->routeIs('student.supervisor-matches') ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-                </svg>
-                Supervisor Matches
+                Student Progress
             </a>
         @endif
 

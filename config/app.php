@@ -123,4 +123,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Seeding Default Password
+    |--------------------------------------------------------------------------
+    |
+    | This value is used as the default password for users created via
+    | database seeders (students and supervisors). Set this in your
+    | ".env" file so it isn't hardcoded into seeder/factory code.
+    |
+    */
+
+    'seed_password' => env('SEED_DEFAULT_PASSWORD', 'password'),
+
 ];

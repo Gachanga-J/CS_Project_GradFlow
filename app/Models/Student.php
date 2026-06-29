@@ -22,9 +22,4 @@ class Student extends Model
     {
         return $this->hasMany(MilestoneSubmission::class);
     }
-
-    public function projects(): HasMany
-    {
-        return $this->hasMany(Project::class);
-    }
 }

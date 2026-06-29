@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Department;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -21,7 +22,9 @@ class RegisteredStudentController extends Controller
      */
     public function create(): View
     {
-        return view('auth.register-student');
+        $departments = Department::orderBy('name')->get();
+
+        return view('auth.register-student', compact('departments'));
     }
 
     /**
@@ -44,6 +47,7 @@ class RegisteredStudentController extends Controller
                     }
                 },
             ],
+            'department_id' => ['required', 'exists:departments,id'],
             'reg_number' => ['required', 'string', 'max:30', Rule::unique('students', 'reg_number')],
             'year_of_study' => ['nullable', 'integer', 'between:1,6'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
@@ -55,6 +59,7 @@ class RegisteredStudentController extends Controller
             'email' => $validated['email'],
             'password' => $validated['password'],
             'role' => 'student',
+            'department_id' => $validated['department_id'],
             'is_active' => true,
         ]);
 
