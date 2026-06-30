@@ -75,6 +75,15 @@
 
             {{-- Current Submission --}}
             @if ($submission)
+                @php
+                    $pipelineStep = match($submission->status) {
+                        'submitted' => 1,
+                        'supervisor_approved', 'graded' => 2,
+                        'supervisor_rejected' => 0,
+                        default => 1,
+                    };
+                @endphp
+
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Your Submission</h3>
@@ -94,12 +103,56 @@
                             </p>
                         </div>
 
-                        {{-- Status --}}
-                        <div class="mb-4">
-                            <span style="padding:4px 12px; border-radius:999px; font-size:11px; font-weight:600;
-                                {{ $submission->status === 'graded' ? 'background:#dcfce7; color:#15803d;' : ($submission->status === 'supervisor_approved' ? 'background:#dbeafe; color:#1d4ed8;' : ($submission->status === 'supervisor_rejected' ? 'background:#fee2e2; color:#dc2626;' : 'background:#fef9c3; color:#a16207;')) }}">
-                                {{ ucfirst(str_replace('_', ' ', $submission->status)) }}
-                            </span>
+                        {{-- Review Pipeline --}}
+                        <div class="mb-5">
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Review Progress</p>
+
+                            @if($submission->status === 'supervisor_rejected')
+                                <div class="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                    <span class="flex items-center justify-center h-7 w-7 rounded-full bg-red-500 text-white text-sm font-bold shrink-0">✕</span>
+                                    <div>
+                                        <p class="text-sm font-semibold text-red-700">Rejected by Supervisor</p>
+                                        <p class="text-xs text-red-600">Please review the feedback below and resubmit.</p>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="flex items-center">
+                                    {{-- Step 1: Supervisor --}}
+                                    <div class="flex flex-col items-center" style="width:90px;">
+                                        <span class="flex items-center justify-center h-8 w-8 rounded-full text-sm font-bold
+                                            {{ $pipelineStep >= 2 ? 'bg-emerald-500 text-white' : ($pipelineStep === 1 ? 'bg-amber-400 text-white' : 'bg-gray-200 text-gray-400') }}">
+                                            {{ $pipelineStep >= 2 ? '✓' : '1' }}
+                                        </span>
+                                        <span class="text-[11px] font-medium mt-1 text-center {{ $pipelineStep >= 1 ? 'text-gray-700' : 'text-gray-400' }}">
+                                            Supervisor<br>Review
+                                        </span>
+                                    </div>
+
+                                    {{-- Connector --}}
+                                    <div class="flex-1 h-0.5 {{ $pipelineStep >= 2 ? 'bg-emerald-400' : 'bg-gray-200' }}"></div>
+
+                                    {{-- Step 2: Grading --}}
+                                    <div class="flex flex-col items-center" style="width:90px;">
+                                        <span class="flex items-center justify-center h-8 w-8 rounded-full text-sm font-bold
+                                            {{ $submission->status === 'graded' ? 'bg-emerald-500 text-white' : ($pipelineStep >= 2 ? 'bg-amber-400 text-white' : 'bg-gray-200 text-gray-400') }}">
+                                            {{ $submission->status === 'graded' ? '✓' : '2' }}
+                                        </span>
+                                        <span class="text-[11px] font-medium mt-1 text-center {{ $pipelineStep >= 2 ? 'text-gray-700' : 'text-gray-400' }}">
+                                            Coordinator<br>Grading
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <p class="text-xs text-gray-500 mt-3">
+                                    @if($submission->status === 'submitted')
+                                        Your submission is awaiting review by your supervisor.
+                                    @elseif($submission->status === 'supervisor_approved')
+                                        Approved by your supervisor — now waiting for your coordinator to grade it.
+                                    @elseif($submission->status === 'graded')
+                                        Fully reviewed and graded.
+                                    @endif
+                                </p>
+                            @endif
                         </div>
 
                         {{-- Supervisor Feedback --}}
@@ -152,8 +205,17 @@
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">
                             {{ $submission ? 'Resubmit Deliverable' : 'Submit Deliverable' }}
                         </h3>
-                        <p class="text-sm text-gray-500 mb-6">
+                        <p class="text-sm text-gray-500 mb-2">
                             Accepted formats: <strong>PDF, DOC, DOCX</strong>. Max size: <strong>5MB</strong>.
+                        </p>
+                        <p class="text-xs text-gray-400 mb-6 flex items-start gap-1.5">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 mt-0.5">
+                                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                            <span>
+                                Once submitted, your <strong>Supervisor</strong> will review it first. After their approval,
+                                your <strong>Department Coordinator</strong> grades it. You can track progress on this page anytime.
+                            </span>
                         </p>
 
                         <form method="POST"
@@ -193,7 +255,7 @@
                                 <button type="submit"
                                         style="font-size:14px; font-weight:600; padding:8px 20px; border-radius:6px;
                                         {{ $isLate ? 'border:2px solid #d97706; background:#f59e0b; color:white;' : 'border:2px solid #3730a3; background:#4f46e5; color:white;' }} cursor:pointer;">
-                                    {{ $isLate ? '⚠ Submit Late' : ($submission ? 'Resubmit Milestone' : 'Submit Milestone') }}
+                                    {{ $isLate ? '⚠ Submit Late' : ($submission ? 'Resubmit for Supervisor Review' : 'Submit for Supervisor Review') }}
                                 </button>
                             </div>
                         </form>

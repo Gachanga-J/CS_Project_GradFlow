@@ -54,6 +54,7 @@ class SubmissionController extends Controller
         abort_if(!$submission->file_path, 404);
 
         $fullPath = storage_path('app/private/' . $submission->file_path);
+
         abort_if(!file_exists($fullPath), 404, 'File not found.');
 
         return response()->download($fullPath, $submission->file_name);
@@ -62,6 +63,12 @@ class SubmissionController extends Controller
     public function grade(Request $request, MilestoneSubmission $submission)
     {
         abort_if($submission->milestone->department_id !== Auth::user()->department_id, 403);
+
+        abort_if(
+            $submission->status !== 'supervisor_approved',
+            422,
+            'This submission must be approved by the supervisor before it can be graded.'
+        );
 
         $request->validate([
             'grade'          => ['required', 'integer', 'min:0', 'max:100'],

@@ -22,33 +22,48 @@
 
                 @forelse($notifications as $notification)
                     @php
-                        $isOverdue = ($notification->data['type'] ?? '') === 'overdue';
+                        $isDeadlineReminder = $notification->type === \App\Notifications\MilestoneDeadlineReminder::class;
+                        $isSubmissionReview = $notification->type === \App\Notifications\SubmissionReviewed::class;
+                        $isOverdue = $isDeadlineReminder && ($notification->data['type'] ?? '') === 'overdue';
+                        $isApproved = $isSubmissionReview && ($notification->data['decision'] ?? '') === 'approved';
                         $daysLeft  = $notification->data['days_left'] ?? null;
                         $isUnread  = is_null($notification->read_at);
+
+                        $accentRed = $isOverdue || ($isSubmissionReview && ! $isApproved);
                     @endphp
 
                     <div class="flex items-start gap-4 px-6 py-4 border-b border-gray-100 dark:border-gray-700 last:border-b-0
-                        {{ $isUnread ? ($isOverdue ? 'bg-red-50 dark:bg-red-900/20' : 'bg-indigo-50 dark:bg-indigo-900/20') : '' }}">
+                        {{ $isUnread ? ($accentRed ? 'bg-red-50 dark:bg-red-900/20' : 'bg-indigo-50 dark:bg-indigo-900/20') : '' }}">
 
                         {{-- Icon --}}
                         <div class="shrink-0 mt-0.5 text-xl">
-                            {{ $isOverdue ? '🚨' : '⏰' }}
+                            @if($isDeadlineReminder)
+                                {{ $isOverdue ? '🚨' : '⏰' }}
+                            @elseif($isSubmissionReview)
+                                {{ $isApproved ? '✅' : '❌' }}
+                            @else
+                                🔔
+                            @endif
                         </div>
 
                         {{-- Content --}}
                         <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium {{ $isUnread ? ($isOverdue ? 'text-red-700 dark:text-red-400' : 'text-gray-900 dark:text-gray-100') : 'text-gray-500 dark:text-gray-400' }}">
+                            <p class="text-sm font-medium {{ $isUnread ? ($accentRed ? 'text-red-700 dark:text-red-400' : 'text-gray-900 dark:text-gray-100') : 'text-gray-500 dark:text-gray-400' }}">
                                 {{ $notification->data['milestone_title'] ?? 'Notification' }}
                             </p>
 
                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                @if($isOverdue)
-                                    Deadline was {{ $notification->data['deadline'] }} — overdue!
-                                @else
-                                    Deadline: {{ $notification->data['deadline'] }}
-                                    @if(!is_null($daysLeft))
-                                        · {{ $daysLeft === 0 ? 'due today' : "{$daysLeft} day" . ($daysLeft > 1 ? 's' : '') . ' left' }}
+                                @if($isDeadlineReminder)
+                                    @if($isOverdue)
+                                        Deadline was {{ $notification->data['deadline'] }} — overdue!
+                                    @else
+                                        Deadline: {{ $notification->data['deadline'] }}
+                                        @if(!is_null($daysLeft))
+                                            · {{ $daysLeft === 0 ? 'due today' : "{$daysLeft} day" . ($daysLeft > 1 ? 's' : '') . ' left' }}
+                                        @endif
                                     @endif
+                                @elseif($isSubmissionReview)
+                                    {{ $notification->data['message'] ?? '' }}
                                 @endif
                             </p>
 
@@ -58,7 +73,7 @@
                                 </span>
                                 @if(isset($notification->data['route']))
                                     <a href="{{ $notification->data['route'] }}"
-                                       class="text-xs font-medium {{ $isOverdue ? 'text-red-600 hover:text-red-800' : 'text-indigo-600 hover:text-indigo-800' }}">
+                                       class="text-xs font-medium {{ $accentRed ? 'text-red-600 hover:text-red-800' : 'text-indigo-600 hover:text-indigo-800' }}">
                                         View milestone →
                                     </a>
                                 @endif

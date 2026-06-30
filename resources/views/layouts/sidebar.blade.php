@@ -1,5 +1,15 @@
 @php
     $role = Auth::user()->role;
+
+    $supervisorPendingCount = 0;
+    if ($role === 'supervisor' && Auth::user()->supervisor) {
+        $supervisorPendingCount = \App\Models\MilestoneSubmission::where('status', 'submitted')
+            ->where('is_latest', true)
+            ->whereHas('student.projects', function ($query) {
+                $query->where('supervisor_id', Auth::user()->supervisor->id);
+            })
+            ->count();
+    }
 @endphp
 
 <aside class="w-64 min-h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
@@ -157,14 +167,21 @@
             <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Submissions</p>
 
             <a href="{{ route('supervisor.submissions.index') }}"
-               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+               class="flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
                {{ request()->routeIs('supervisor.submissions.*') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-                </svg>
-                Review Submissions
+                <span class="flex items-center gap-3">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    Review Submissions
+                </span>
+                @if($supervisorPendingCount > 0)
+                    <span class="inline-flex items-center justify-center h-5 min-w-[20px] px-1 rounded-full bg-amber-500 text-white text-xs font-bold">
+                        {{ $supervisorPendingCount > 9 ? '9+' : $supervisorPendingCount }}
+                    </span>
+                @endif
             </a>
 
             <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Profile</p>

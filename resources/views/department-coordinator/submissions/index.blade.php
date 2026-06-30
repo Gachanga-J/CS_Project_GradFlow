@@ -146,6 +146,7 @@
                                                         {{ $submission->status === 'supervisor_approved' ? 'background:#dbeafe; color:#1d4ed8;' : ($submission->status === 'supervisor_rejected' ? 'background:#fee2e2; color:#dc2626;' : 'background:#f3f4f6; color:#6b7280;') }}">
                                                         @if($submission->status === 'supervisor_approved') Approved
                                                         @elseif($submission->status === 'supervisor_rejected') Rejected
+                                                        @elseif($submission->status === 'graded') Approved
                                                         @else Pending
                                                         @endif
                                                     </span>
@@ -183,7 +184,7 @@
                                                 Download File
                                             </a>
 
-                                            @if ($submission->status !== 'graded')
+                                            @if ($submission->status === 'supervisor_approved')
                                                 <form method="POST"
                                                       action="{{ route('department-coordinator.submissions.grade', $submission) }}"
                                                       style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
@@ -202,7 +203,7 @@
                                                         Grade Submission
                                                     </button>
                                                 </form>
-                                            @else
+                                            @elseif ($submission->status === 'graded')
                                                 <form method="POST"
                                                       action="{{ route('department-coordinator.submissions.grade', $submission) }}"
                                                       style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
@@ -222,6 +223,10 @@
                                                         Regrade Submission
                                                     </button>
                                                 </form>
+                                            @else
+                                                <span style="font-size:12px; font-weight:600; padding:6px 14px; border-radius:6px; background:#f3f4f6; color:#6b7280;">
+                                                    Awaiting supervisor approval before grading
+                                                </span>
                                             @endif
                                         </div>
                                     </div>

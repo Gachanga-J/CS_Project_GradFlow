@@ -61,23 +61,39 @@
                             <div class="max-h-80 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
                                 @forelse(Auth::user()->notifications()->latest()->take(10)->get() as $notification)
                                     @php
-                                        $isOverdue = ($notification->data['type'] ?? '') === 'overdue';
+                                        $isDeadlineReminder = $notification->type === \App\Notifications\MilestoneDeadlineReminder::class;
+                                        $isSubmissionReview  = $notification->type === \App\Notifications\SubmissionReviewed::class;
+                                        $isOverdue = $isDeadlineReminder && ($notification->data['type'] ?? '') === 'overdue';
                                         $daysLeft  = $notification->data['days_left'] ?? null;
                                     @endphp
                                     <div class="px-4 py-3 {{ $notification->read_at ? 'opacity-60' : ($isOverdue ? 'bg-red-50 dark:bg-red-900/20' : 'bg-indigo-50 dark:bg-indigo-900/20') }}">
                                         <div class="flex items-start justify-between gap-2">
                                             <div class="flex-1">
-                                                <p class="text-sm font-medium {{ $isOverdue ? 'text-red-700' : 'text-gray-800 dark:text-gray-100' }}">
-                                                    {{ $isOverdue ? '🚨' : '⏰' }} {{ $notification->data['milestone_title'] }}
-                                                </p>
-                                                <p class="text-xs text-gray-500 mt-0.5">
-                                                    @if($isOverdue)
-                                                        Deadline was {{ $notification->data['deadline'] }} — overdue!
-                                                    @else
-                                                        Deadline: {{ $notification->data['deadline'] }}
-                                                        · {{ $daysLeft === 0 ? 'due today' : "{$daysLeft} day" . ($daysLeft > 1 ? 's' : '') . ' left' }}
-                                                    @endif
-                                                </p>
+                                                @if($isDeadlineReminder)
+                                                    <p class="text-sm font-medium {{ $isOverdue ? 'text-red-700' : 'text-gray-800 dark:text-gray-100' }}">
+                                                        {{ $isOverdue ? '🚨' : '⏰' }} {{ $notification->data['milestone_title'] }}
+                                                    </p>
+                                                    <p class="text-xs text-gray-500 mt-0.5">
+                                                        @if($isOverdue)
+                                                            Deadline was {{ $notification->data['deadline'] }} — overdue!
+                                                        @else
+                                                            Deadline: {{ $notification->data['deadline'] }}
+                                                            · {{ $daysLeft === 0 ? 'due today' : "{$daysLeft} day" . ($daysLeft > 1 ? 's' : '') . ' left' }}
+                                                        @endif
+                                                    </p>
+                                                @elseif($isSubmissionReview)
+                                                    @php $approved = ($notification->data['decision'] ?? '') === 'approved'; @endphp
+                                                    <p class="text-sm font-medium {{ $approved ? 'text-green-700' : 'text-red-700' }}">
+                                                        {{ $approved ? '✅' : '❌' }} {{ $notification->data['milestone_title'] ?? 'Submission reviewed' }}
+                                                    </p>
+                                                    <p class="text-xs text-gray-500 mt-0.5">
+                                                        {{ $notification->data['message'] ?? '' }}
+                                                    </p>
+                                                @else
+                                                    <p class="text-sm font-medium text-gray-800 dark:text-gray-100">
+                                                        Notification
+                                                    </p>
+                                                @endif
                                                 <div class="flex items-center gap-3 mt-1">
                                                     <p class="text-xs text-gray-400">
                                                         {{ $notification->created_at->diffForHumans() }}

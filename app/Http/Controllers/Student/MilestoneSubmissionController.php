@@ -27,7 +27,18 @@ class MilestoneSubmissionController extends Controller
             ->where('is_latest', true)
             ->first();
 
-        return view('student.milestones.show', compact('milestone', 'submission'));
+        // All versions for history
+        $submissionHistory = MilestoneSubmission::where('milestone_id', $milestone->id)
+            ->where('student_id', $student->id)
+            ->orderBy('version_number', 'desc')
+            ->get();
+
+        // Is the student currently submitting/resubmitting past the deadline?
+        $isLate = $milestone->deadline
+            && now()->greaterThan($milestone->deadline->endOfDay())
+            && $milestone->status === 'open';
+
+        return view('student.milestones.show', compact('milestone', 'submission', 'submissionHistory', 'isLate'));
     }
 
     public function store(Request $request, Milestone $milestone)
@@ -44,6 +55,9 @@ class MilestoneSubmissionController extends Controller
         $request->validate([
             'file' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
         ]);
+
+        $isLate = $milestone->deadline
+            && now()->greaterThan($milestone->deadline->endOfDay());
 
         $latestVersion = MilestoneSubmission::where('milestone_id', $milestone->id)
             ->where('student_id', $student->id)
@@ -72,10 +86,13 @@ class MilestoneSubmissionController extends Controller
             'is_latest'       => true,
             'status'          => 'submitted',
             'submitted_at'    => now(),
+            'submitted_late'  => $isLate,
         ]);
 
         return redirect()->route('student.milestones.show', $milestone)
-            ->with('success', 'Submission uploaded successfully!');
+            ->with($isLate ? 'warning' : 'success', $isLate
+                ? 'Submission uploaded, but it was after the deadline and has been marked late.'
+                : 'Submission uploaded successfully!');
     }
 
     /**

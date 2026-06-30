@@ -55,6 +55,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/milestones/{milestone}', [App\Http\Controllers\DepartmentCoordinator\MilestoneController::class, 'update'])->name('milestones.update');
         Route::post('/milestones/{milestone}/toggle', [App\Http\Controllers\DepartmentCoordinator\MilestoneController::class, 'toggleStatus'])->name('milestones.toggle');
         Route::delete('/milestones/{milestone}', [App\Http\Controllers\DepartmentCoordinator\MilestoneController::class, 'destroy'])->name('milestones.destroy');
+        Route::post('/milestones/send-reminders', [App\Http\Controllers\DepartmentCoordinator\MilestoneController::class, 'sendReminders'])->name('milestones.send-reminders');
 
         Route::get('/submissions', [App\Http\Controllers\DepartmentCoordinator\SubmissionController::class, 'index'])->name('submissions.index');
         Route::get('/submissions/{submission}/download', [App\Http\Controllers\DepartmentCoordinator\SubmissionController::class, 'download'])->name('submissions.download');
@@ -80,7 +81,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/users', [App\Http\Controllers\SystemAdministrator\UserController::class, 'index'])->name('users.index');
         Route::get('/users/create', [App\Http\Controllers\SystemAdministrator\UserController::class, 'create'])->name('users.create');
         Route::post('/users', [App\Http\Controllers\SystemAdministrator\UserController::class, 'store'])->name('users.store');
-        Route::get('/users/{user}/edit', [App\Http\Controllers\SystemAdministrator\DepartmentController::class, 'edit'])->name('users.edit');
+        Route::get('/users/{user}/edit', [App\Http\Controllers\SystemAdministrator\UserController::class, 'edit'])->name('users.edit');
         Route::put('/users/{user}', [App\Http\Controllers\SystemAdministrator\UserController::class, 'update'])->name('users.update');
         Route::post('/users/{user}/toggle', [App\Http\Controllers\SystemAdministrator\UserController::class, 'toggleActive'])->name('users.toggle');
         Route::post('/users/{user}/reset-password', [App\Http\Controllers\SystemAdministrator\UserController::class, 'resetPassword'])->name('users.reset-password');
