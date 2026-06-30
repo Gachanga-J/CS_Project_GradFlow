@@ -7,6 +7,7 @@ use App\Models\Milestone;
 use App\Models\MilestoneSubmission;
 use App\Models\Supervisor;
 use App\Models\Project;
+use App\Notifications\NewSubmissionReceived;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -75,7 +76,7 @@ class MilestoneSubmissionController extends Controller
             'local'
         );
 
-        MilestoneSubmission::create([
+        $submission = MilestoneSubmission::create([
             'milestone_id'    => $milestone->id,
             'student_id'      => $student->id,
             'file_path'       => $filePath,
@@ -88,6 +89,12 @@ class MilestoneSubmissionController extends Controller
             'submitted_at'    => now(),
             'submitted_late'  => $isLate,
         ]);
+
+        // Notify the assigned supervisor, if this student has an active project with one
+        $project = $student->projects()->whereNotNull('supervisor_id')->first();
+        if ($project && $project->supervisor) {
+            $project->supervisor->user->notify(new NewSubmissionReceived($submission));
+        }
 
         return redirect()->route('student.milestones.show', $milestone)
             ->with($isLate ? 'warning' : 'success', $isLate

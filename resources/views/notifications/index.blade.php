@@ -24,7 +24,8 @@
                     @php
                         $isDeadlineReminder = $notification->type === \App\Notifications\MilestoneDeadlineReminder::class;
                         $isSubmissionReview = $notification->type === \App\Notifications\SubmissionReviewed::class;
-                        $isOverdue = $isDeadlineReminder && ($notification->data['type'] ?? '') === 'overdue';
+                        $isNewSubmission    = $notification->type === \App\Notifications\NewSubmissionReceived::class;
+                        $isOverdue  = $isDeadlineReminder && ($notification->data['type'] ?? '') === 'overdue';
                         $isApproved = $isSubmissionReview && ($notification->data['decision'] ?? '') === 'approved';
                         $daysLeft  = $notification->data['days_left'] ?? null;
                         $isUnread  = is_null($notification->read_at);
@@ -41,6 +42,8 @@
                                 {{ $isOverdue ? '🚨' : '⏰' }}
                             @elseif($isSubmissionReview)
                                 {{ $isApproved ? '✅' : '❌' }}
+                            @elseif($isNewSubmission)
+                                📄
                             @else
                                 🔔
                             @endif
@@ -62,7 +65,7 @@
                                             · {{ $daysLeft === 0 ? 'due today' : "{$daysLeft} day" . ($daysLeft > 1 ? 's' : '') . ' left' }}
                                         @endif
                                     @endif
-                                @elseif($isSubmissionReview)
+                                @elseif($isSubmissionReview || $isNewSubmission)
                                     {{ $notification->data['message'] ?? '' }}
                                 @endif
                             </p>
@@ -74,7 +77,7 @@
                                 @if(isset($notification->data['route']))
                                     <a href="{{ $notification->data['route'] }}"
                                        class="text-xs font-medium {{ $accentRed ? 'text-red-600 hover:text-red-800' : 'text-indigo-600 hover:text-indigo-800' }}">
-                                        View milestone →
+                                        View →
                                     </a>
                                 @endif
                             </div>

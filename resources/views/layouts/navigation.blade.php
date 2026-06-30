@@ -19,8 +19,8 @@
 
             <div class="hidden sm:flex sm:items-center sm:ms-6 gap-3">
 
-                {{-- Bell icon (students only) --}}
-                @if(Auth::user()->role === 'student')
+                {{-- Bell icon (students and supervisors) --}}
+                @if(in_array(Auth::user()->role, ['student', 'supervisor']))
                     @php $unread = Auth::user()->unreadNotifications; @endphp
                     <div class="relative" x-data="{ notifOpen: false }">
                         <button @click="notifOpen = !notifOpen"
@@ -62,7 +62,8 @@
                                 @forelse(Auth::user()->notifications()->latest()->take(10)->get() as $notification)
                                     @php
                                         $isDeadlineReminder = $notification->type === \App\Notifications\MilestoneDeadlineReminder::class;
-                                        $isSubmissionReview  = $notification->type === \App\Notifications\SubmissionReviewed::class;
+                                        $isSubmissionReview = $notification->type === \App\Notifications\SubmissionReviewed::class;
+                                        $isNewSubmission    = $notification->type === \App\Notifications\NewSubmissionReceived::class;
                                         $isOverdue = $isDeadlineReminder && ($notification->data['type'] ?? '') === 'overdue';
                                         $daysLeft  = $notification->data['days_left'] ?? null;
                                     @endphp
@@ -89,6 +90,13 @@
                                                     <p class="text-xs text-gray-500 mt-0.5">
                                                         {{ $notification->data['message'] ?? '' }}
                                                     </p>
+                                                @elseif($isNewSubmission)
+                                                    <p class="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+                                                        📄 {{ $notification->data['milestone_title'] ?? 'New submission' }}
+                                                    </p>
+                                                    <p class="text-xs text-gray-500 mt-0.5">
+                                                        {{ $notification->data['message'] ?? '' }}
+                                                    </p>
                                                 @else
                                                     <p class="text-sm font-medium text-gray-800 dark:text-gray-100">
                                                         Notification
@@ -101,7 +109,7 @@
                                                     @if(isset($notification->data['route']))
                                                         <a href="{{ $notification->data['route'] }}"
                                                            class="text-xs font-medium {{ $isOverdue ? 'text-red-600 hover:text-red-800' : 'text-indigo-600 hover:text-indigo-800' }}">
-                                                            View milestone →
+                                                            View →
                                                         </a>
                                                     @endif
                                                 </div>

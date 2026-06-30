@@ -14,9 +14,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return view('dashboard.student');
     })->middleware('role:student')->name('dashboard.student');
 
-    Route::get('/dashboard/supervisor', function () {
-        return view('dashboard.supervisor');
-    })->middleware('role:supervisor')->name('dashboard.supervisor');
+    Route::get('/dashboard/supervisor', [App\Http\Controllers\Supervisor\StudentController::class, 'dashboard'])
+        ->middleware('role:supervisor')->name('dashboard.supervisor');
 
     Route::get('/dashboard/department-coordinator', function () {
         return view('dashboard.department-coordinator');
@@ -93,7 +92,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // ── Notifications ─────────────────────────────────────────────────────────
-    Route::prefix('notifications')->name('notifications.')->middleware('role:student')->group(function () {
+    Route::prefix('notifications')->name('notifications.')->middleware('role:student,supervisor')->group(function () {
         Route::get('/', function () {
             $notifications = auth()->user()->notifications()->latest()->paginate(20);
             return view('notifications.index', compact('notifications'));

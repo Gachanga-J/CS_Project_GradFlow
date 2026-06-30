@@ -16,13 +16,20 @@
                 $pending = $project->student->milestoneSubmissions->where('status', 'submitted');
             @endphp
 
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border overflow-hidden
+                {{ $pending->count() > 0 ? 'border-amber-300 dark:border-amber-700' : 'border-gray-200 dark:border-gray-700' }}">
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between
+                    {{ $pending->count() > 0 ? 'bg-amber-50 dark:bg-amber-900/20' : '' }}">
                     <div>
                         <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">{{ $project->title }}</p>
                         <p class="text-xs text-gray-400 mt-0.5">{{ $project->student->user->full_name }} &middot; {{ $project->student->reg_number }}</p>
                     </div>
-                    <span class="text-xs px-2 py-0.5 rounded-full {{ $pending->count() > 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400' }}">
+                    <span class="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold {{ $pending->count() > 0 ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400' }}">
+                        @if($pending->count() > 0)
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                        @endif
                         {{ $pending->count() }} pending
                     </span>
                 </div>
@@ -32,15 +39,33 @@
                 @else
                     <ul class="divide-y divide-gray-100 dark:divide-gray-700">
                         @foreach($project->student->milestoneSubmissions->sortByDesc('submitted_at') as $submission)
-                            <li class="px-6 py-4 flex items-start justify-between gap-4">
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ $submission->milestone->title }}</p>
-                                    <p class="text-xs text-gray-400 mt-0.5">{{ $submission->file_name }} &middot; {{ $submission->file_size_formatted }} &middot; v{{ $submission->version_number }}</p>
-                                    <p class="text-xs text-gray-400 mt-0.5">Submitted {{ $submission->submitted_at->diffForHumans() }}</p>
+                            @php $isPending = $submission->status === 'submitted'; @endphp
+                            <li class="px-6 py-4 flex items-start justify-between gap-4 {{ $isPending ? 'bg-amber-50/50 dark:bg-amber-900/10' : '' }}">
+                                <div class="flex items-start gap-3 flex-1 min-w-0">
+                                    {{-- File icon --}}
+                                    <div class="shrink-0 mt-0.5 flex items-center justify-center h-9 w-9 rounded-lg
+                                        {{ $isPending ? 'bg-amber-100 dark:bg-amber-900/40' : 'bg-gray-100 dark:bg-gray-700' }}">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{ $isPending ? '#b45309' : '#9ca3af' }}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                            <polyline points="14 2 14 8 20 8"/>
+                                            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                                        </svg>
+                                    </div>
 
-                                    @if($submission->supervisor_feedback)
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">Feedback: {{ $submission->supervisor_feedback }}</p>
-                                    @endif
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <p class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ $submission->milestone->title }}</p>
+                                            @if($isPending)
+                                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500 text-white uppercase tracking-wide">New</span>
+                                            @endif
+                                        </div>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ $submission->file_name }} &middot; {{ $submission->file_size_formatted }} &middot; v{{ $submission->version_number }}</p>
+                                        <p class="text-xs text-gray-400 mt-0.5">Submitted {{ $submission->submitted_at->diffForHumans() }}</p>
+
+                                        @if($submission->supervisor_feedback)
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">Feedback: {{ $submission->supervisor_feedback }}</p>
+                                        @endif
+                                    </div>
                                 </div>
 
                                 <div class="flex flex-col items-end gap-2 shrink-0">
@@ -56,7 +81,13 @@
 
                                     {{-- Download --}}
                                     <a href="{{ route('supervisor.submissions.download', $submission) }}"
-                                       class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Download</a>
+                                       class="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                            <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                                        </svg>
+                                        Download
+                                    </a>
 
                                     {{-- Approve / Reject forms (only for submitted) --}}
                                     @if($submission->status === 'submitted')

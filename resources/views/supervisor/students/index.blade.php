@@ -15,7 +15,7 @@
                 <p class="text-xs text-gray-400 mt-1">Max Capacity</p>
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-5 py-4 text-center">
-                <p class="text-2xl font-bold text-{{ $supervisor->hasCapacity() ? 'emerald' : 'red' }}-600 dark:text-{{ $supervisor->hasCapacity() ? 'emerald' : 'red' }}-400">
+                <p class="text-2xl font-bold text-{{ $supervisor->hasCapacity() ? 'emerald' : 'red' }}-600 dark:text-{{$supervisor->hasCapacity() ? 'emerald' : 'red' }}-400">
                     {{ $supervisor->hasCapacity() ? 'Open' : 'Full' }}
                 </p>
                 <p class="text-xs text-gray-400 mt-1">Capacity Status</p>
@@ -23,6 +23,12 @@
         </div>
 
         @forelse($projects as $project)
+            @php
+                $milestonesTotal     = $project->milestones_total ?? 0;
+                $milestonesCompleted = $project->milestones_completed ?? 0;
+                $completionPercent   = $milestonesTotal > 0 ? round(($milestonesCompleted / $milestonesTotal) * 100) : 0;
+            @endphp
+
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
                     <div class="flex items-start justify-between">
@@ -48,6 +54,24 @@
                                     {{ $tag->name }}
                                 </span>
                             @endforeach
+                        </div>
+                    @endif
+
+                    {{-- Milestone progress mini bar --}}
+                    @if($milestonesTotal > 0)
+                        <div class="mt-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ $milestonesCompleted }} of {{ $milestonesTotal }} milestones complete
+                                </span>
+                                <span class="text-xs font-semibold {{ $completionPercent === 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400' }}">
+                                    {{ $completionPercent }}%
+                                </span>
+                            </div>
+                            <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                                <div class="h-1.5 rounded-full transition-all duration-500 {{ $completionPercent === 100 ? 'bg-emerald-500' : 'bg-indigo-400' }}"
+                                     style="width: {{ $completionPercent }}%"></div>
+                            </div>
                         </div>
                     @endif
                 </div>
