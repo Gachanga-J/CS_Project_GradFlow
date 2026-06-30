@@ -54,46 +54,47 @@
                 </a>
             </div>
 
-            {{-- Per-Milestone Submission Overview --}}
-            @if($milestoneStats->isNotEmpty())
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-xl border border-gray-200 dark:border-gray-700">
-                    <div class="p-6">
-                        <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">
-                            Milestone Submission Overview
-                        </h3>
-                        <p class="text-xs text-gray-400 mb-5">
-                            Across all students you supervise
-                        </p>
+            {{-- Per-Department Milestone Submission Overview --}}
+            @foreach($departmentMilestones as $deptGroup)
+                @if($deptGroup['stats']->isNotEmpty())
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-xl border border-gray-200 dark:border-gray-700">
+                        <div class="p-6">
+                            <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1">
+                                Milestone Submission Overview
+                            </h3>
+                            <p class="text-xs text-gray-400 mb-5">
+                                {{ $deptGroup['department']->name ?? 'Unassigned Department' }} &middot; students you supervise in this department
+                            </p>
 
-                        <div class="space-y-5">
-                            @foreach($milestoneStats as $stat)
-                                <div>
-                                    <div class="flex items-center justify-between mb-1.5">
-                                        <p class="text-sm font-medium text-gray-700 dark:text-gray-200">
-                                            {{ $stat['milestone']->sequence_order }}. {{ $stat['milestone']->title }}
-                                        </p>
-                                        <p class="text-xs font-semibold {{ $stat['percent'] === 100 ? 'text-emerald-600' : 'text-gray-500' }}">
-                                            {{ $stat['submitted_count'] }}/{{ $stat['submitted_count'] + $stat['not_submitted'] }} submitted
-                                        </p>
+                            <div class="space-y-5">
+                                @foreach($deptGroup['stats'] as $stat)
+                                    <div>
+                                        <div class="flex items-center justify-between mb-1.5">
+                                            <p class="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                {{ $stat['milestone']->sequence_order }}. {{ $stat['milestone']->title }}
+                                            </p>
+                                            <p class="text-xs font-semibold {{ $stat['percent'] === 100 ? 'text-emerald-600' : 'text-gray-500' }}">
+                                                {{ $stat['submitted_count'] }}/{{ $stat['total_students'] }} submitted
+                                            </p>
+                                        </div>
+
+                                        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
+                                            <div class="h-2.5 rounded-full transition-all duration-500 {{ $stat['percent'] === 100 ? 'bg-emerald-500' : 'bg-indigo-400' }}"
+                                                 style="width: {{ $stat['percent'] }}%"></div>
+                                        </div>
+
+                                        @if($stat['not_submitted'] > 0)
+                                            <p class="text-xs text-gray-400 mt-1">
+                                                {{ $stat['not_submitted'] }} {{ Str::plural('student', $stat['not_submitted']) }} yet to submit
+                                            </p>
+                                        @endif
                                     </div>
-
-                                    {{-- Bar: submitted vs not submitted --}}
-                                    <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
-                                        <div class="h-2.5 rounded-full transition-all duration-500 {{ $stat['percent'] === 100 ? 'bg-emerald-500' : 'bg-indigo-400' }}"
-                                             style="width: {{ $stat['percent'] }}%"></div>
-                                    </div>
-
-                                    @if($stat['not_submitted'] > 0)
-                                        <p class="text-xs text-gray-400 mt-1">
-                                            {{ $stat['not_submitted'] }} {{ Str::plural('student', $stat['not_submitted']) }} yet to submit
-                                        </p>
-                                    @endif
-                                </div>
-                            @endforeach
+                                @endforeach
+                            </div>
                         </div>
                     </div>
-                </div>
-            @endif
+                @endif
+            @endforeach
 
         </div>
     </div>
