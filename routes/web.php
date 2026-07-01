@@ -27,9 +27,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // ── Student Routes ────────────────────────────────────────────────────────
     Route::prefix('student')->name('student.')->middleware('role:student')->group(function () {
+        // Milestones
         Route::get('/milestones/{milestone}', [App\Http\Controllers\Student\MilestoneSubmissionController::class, 'show'])->name('milestones.show');
         Route::post('/milestones/{milestone}/submit', [App\Http\Controllers\Student\MilestoneSubmissionController::class, 'store'])->name('milestones.submit');
+
+        // Supervisor matches
         Route::get('/supervisor-matches', [App\Http\Controllers\Student\MilestoneSubmissionController::class, 'supervisorMatches'])->name('supervisor-matches');
+
+        // Project
+        Route::get('/projects/create', [App\Http\Controllers\Student\ProjectController::class, 'create'])->name('projects.create');
+        Route::post('/projects', [App\Http\Controllers\Student\ProjectController::class, 'store'])->name('projects.store');
+        Route::get('/projects/{project}', [App\Http\Controllers\Student\ProjectController::class, 'show'])->name('projects.show');
     });
 
     // ── Supervisor Routes ─────────────────────────────────────────────────────
@@ -47,6 +55,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // ── Department Coordinator Routes ─────────────────────────────────────────
     Route::prefix('department-coordinator')->name('department-coordinator.')->middleware('role:department_coordinator')->group(function () {
+        // Milestones
         Route::get('/milestones', [App\Http\Controllers\DepartmentCoordinator\MilestoneController::class, 'index'])->name('milestones.index');
         Route::get('/milestones/create', [App\Http\Controllers\DepartmentCoordinator\MilestoneController::class, 'create'])->name('milestones.create');
         Route::post('/milestones', [App\Http\Controllers\DepartmentCoordinator\MilestoneController::class, 'store'])->name('milestones.store');
@@ -56,13 +65,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/milestones/{milestone}', [App\Http\Controllers\DepartmentCoordinator\MilestoneController::class, 'destroy'])->name('milestones.destroy');
         Route::post('/milestones/send-reminders', [App\Http\Controllers\DepartmentCoordinator\MilestoneController::class, 'sendReminders'])->name('milestones.send-reminders');
 
+        // Submissions
         Route::get('/submissions', [App\Http\Controllers\DepartmentCoordinator\SubmissionController::class, 'index'])->name('submissions.index');
+        Route::get('/submissions/progress', [App\Http\Controllers\DepartmentCoordinator\SubmissionController::class, 'progress'])->name('submissions.progress');
         Route::get('/submissions/{submission}/download', [App\Http\Controllers\DepartmentCoordinator\SubmissionController::class, 'download'])->name('submissions.download');
         Route::post('/submissions/{submission}/grade', [App\Http\Controllers\DepartmentCoordinator\SubmissionController::class, 'grade'])->name('submissions.grade');
 
+        // Projects — coordinator only assigns, student creates
         Route::get('/projects', [App\Http\Controllers\DepartmentCoordinator\ProjectController::class, 'index'])->name('projects.index');
-        Route::get('/projects/create', [App\Http\Controllers\DepartmentCoordinator\ProjectController::class, 'create'])->name('projects.create');
-        Route::post('/projects', [App\Http\Controllers\DepartmentCoordinator\ProjectController::class, 'store'])->name('projects.store');
         Route::get('/projects/{project}/assign', [App\Http\Controllers\DepartmentCoordinator\ProjectController::class, 'assign'])->name('projects.assign');
         Route::post('/projects/{project}/assign', [App\Http\Controllers\DepartmentCoordinator\ProjectController::class, 'assignSupervisor'])->name('projects.assign.supervisor');
         Route::delete('/projects/{project}', [App\Http\Controllers\DepartmentCoordinator\ProjectController::class, 'destroy'])->name('projects.destroy');
@@ -99,12 +109,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('index');
 
         Route::post('/{id}/read', function (string $id) {
-            auth()->user()->notifications()->findOrFail($id)->markAsRead();
+            /** @var \App\Models\User $user */
+            $user = auth()->user();
+            $user->notifications()->findOrFail($id)->markAsRead();
             return back();
         })->name('read');
 
         Route::post('/read-all', function () {
-            auth()->user()->unreadNotifications->markAsRead();
+            /** @var \App\Models\User $user */
+            $user = auth()->user();
+            $user->unreadNotifications->markAsRead();
             return back();
         })->name('read-all');
     });
