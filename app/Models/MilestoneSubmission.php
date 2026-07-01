@@ -45,4 +45,22 @@ class MilestoneSubmission extends Model
     {
         return $this->belongsTo(Student::class);
     }
+
+    /**
+     * Human-readable file size (e.g. "1.2 MB", "340 KB").
+     */
+    public function getFileSizeFormattedAttribute(): string
+    {
+        $bytes = $this->file_size_bytes ?? 0;
+
+        if ($bytes >= 1048576) {
+            return number_format($bytes / 1048576, 1) . ' MB';
+        }
+
+        if ($bytes >= 1024) {
+            return number_format($bytes / 1024, 1) . ' KB';
+        }
+
+        return $bytes . ' B';
+    }
 }

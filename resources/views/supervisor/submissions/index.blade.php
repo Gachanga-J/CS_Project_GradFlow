@@ -14,24 +14,37 @@
         @forelse($supervisor->projects as $project)
             @php
                 $pending = $project->student->milestoneSubmissions->where('status', 'submitted');
+                $lateCount = $project->student->milestoneSubmissions->where('submitted_late', true)->count();
             @endphp
 
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border overflow-hidden
                 {{ $pending->count() > 0 ? 'border-amber-300 dark:border-amber-700' : 'border-gray-200 dark:border-gray-700' }}">
+
+                {{-- Project header --}}
                 <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between
                     {{ $pending->count() > 0 ? 'bg-amber-50 dark:bg-amber-900/20' : '' }}">
                     <div>
                         <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">{{ $project->title }}</p>
-                        <p class="text-xs text-gray-400 mt-0.5">{{ $project->student->user->full_name }} &middot; {{ $project->student->reg_number }}</p>
+                        <p class="text-xs text-gray-400 mt-0.5">
+                            {{ $project->student->user->full_name }} · {{ $project->student->reg_number }}
+                        </p>
                     </div>
-                    <span class="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold {{ $pending->count() > 0 ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400' }}">
-                        @if($pending->count() > 0)
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-                            </svg>
+                    <div class="flex items-center gap-2">
+                        @if($lateCount > 0)
+                            <span class="text-xs px-2.5 py-1 rounded-full font-semibold bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
+                                ⚠ {{ $lateCount }} late
+                            </span>
                         @endif
-                        {{ $pending->count() }} pending
-                    </span>
+                        <span class="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold
+                            {{ $pending->count() > 0 ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400' }}">
+                            @if($pending->count() > 0)
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                            @endif
+                            {{ $pending->count() }} pending
+                        </span>
+                    </div>
                 </div>
 
                 @if($project->student->milestoneSubmissions->isEmpty())
@@ -40,7 +53,9 @@
                     <ul class="divide-y divide-gray-100 dark:divide-gray-700">
                         @foreach($project->student->milestoneSubmissions->sortByDesc('submitted_at') as $submission)
                             @php $isPending = $submission->status === 'submitted'; @endphp
-                            <li class="px-6 py-4 flex items-start justify-between gap-4 {{ $isPending ? 'bg-amber-50/50 dark:bg-amber-900/10' : '' }}">
+                            <li class="px-6 py-4 flex items-start justify-between gap-4
+                                {{ $isPending ? 'bg-amber-50/50 dark:bg-amber-900/10' : '' }}">
+
                                 <div class="flex items-start gap-3 flex-1 min-w-0">
                                     {{-- File icon --}}
                                     <div class="shrink-0 mt-0.5 flex items-center justify-center h-9 w-9 rounded-lg
@@ -54,16 +69,34 @@
 
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-2 flex-wrap">
-                                            <p class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ $submission->milestone->title }}</p>
+                                            <p class="text-sm font-medium text-gray-800 dark:text-gray-100">
+                                                {{ $submission->milestone->title }}
+                                            </p>
                                             @if($isPending)
                                                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500 text-white uppercase tracking-wide">New</span>
                                             @endif
+                                            @if($submission->submitted_late)
+                                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 border border-orange-300 uppercase tracking-wide">⚠ Late</span>
+                                            @endif
                                         </div>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ $submission->file_name }} &middot; {{ $submission->file_size_formatted }} &middot; v{{ $submission->version_number }}</p>
-                                        <p class="text-xs text-gray-400 mt-0.5">Submitted {{ $submission->submitted_at->diffForHumans() }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                            {{ $submission->file_name }}
+                                            · {{ $submission->file_size_formatted }}
+                                            · v{{ $submission->version_number }}
+                                        </p>
+                                        <p class="text-xs text-gray-400 mt-0.5">
+                                            Submitted {{ $submission->submitted_at->diffForHumans() }}
+                                            @if($submission->submitted_late && $submission->milestone->deadline)
+                                                <span class="text-orange-500 font-medium">
+                                                    ({{ round($submission->milestone->deadline->diffInDays($submission->submitted_at)) }} day{{ round($submission->milestone->deadline->diffInDays($submission->submitted_at)) > 1 ? 's' : '' }} late)
+                                                </span>
+                                            @endif
+                                        </p>
 
                                         @if($submission->supervisor_feedback)
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">Feedback: {{ $submission->supervisor_feedback }}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
+                                                Feedback: {{ $submission->supervisor_feedback }}
+                                            </p>
                                         @endif
                                     </div>
                                 </div>
@@ -89,10 +122,9 @@
                                         Download
                                     </a>
 
-                                    {{-- Approve / Reject forms (only for submitted) --}}
+                                    {{-- Approve / Reject (only for pending) --}}
                                     @if($submission->status === 'submitted')
                                         <div class="flex gap-2 mt-1">
-                                            {{-- Approve --}}
                                             <form method="POST" action="{{ route('supervisor.submissions.approve', $submission) }}"
                                                   onsubmit="return confirm('Approve this submission?')" class="inline">
                                                 @csrf
@@ -103,7 +135,6 @@
                                                 </button>
                                             </form>
 
-                                            {{-- Reject (inline form toggle) --}}
                                             <button type="button"
                                                 onclick="document.getElementById('reject-form-{{ $submission->id }}').classList.toggle('hidden')"
                                                 class="text-xs px-3 py-1 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-medium dark:bg-red-900/40 dark:hover:bg-red-900/60 dark:text-red-300">
@@ -124,7 +155,6 @@
                                             </button>
                                         </form>
 
-                                        {{-- Optional feedback on approve --}}
                                         <button type="button"
                                             onclick="document.getElementById('approve-feedback-{{ $submission->id }}').classList.toggle('hidden')"
                                             class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 mt-1">

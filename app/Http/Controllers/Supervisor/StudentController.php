@@ -9,9 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class StudentController extends Controller
 {
-    /**
-     * Show all students assigned to this supervisor with project/milestone progress.
-     */
     public function index()
     {
         $supervisor = Auth::user()->supervisor->load([
@@ -23,10 +20,10 @@ class StudentController extends Controller
         ]);
 
         $projects = $supervisor->projects->map(function ($project) {
-            $submissions = $project->student->milestoneSubmissions;
-
+            $submissions  = $project->student->milestoneSubmissions;
             $departmentId = $project->student->user->department_id;
-            $milestones   = Milestone::where('department_id', $departmentId)
+
+            $milestones = Milestone::where('department_id', $departmentId)
                 ->where('status', 'open')
                 ->orderBy('sequence_order')
                 ->get();
@@ -52,18 +49,14 @@ class StudentController extends Controller
         return view('supervisor.students.index', compact('supervisor', 'projects'));
     }
 
-    /**
-     * Show the supervisor dashboard with pending-review stats and a
-     * per-department, per-milestone submission overview.
-     */
     public function dashboard()
     {
         $supervisor = Auth::user()->supervisor;
 
         if (! $supervisor) {
             return view('dashboard.supervisor', [
-                'pendingCount'        => 0,
-                'activeStudents'      => 0,
+                'pendingCount'         => 0,
+                'activeStudents'       => 0,
                 'departmentMilestones' => collect(),
             ]);
         }
@@ -84,26 +77,22 @@ class StudentController extends Controller
 
         $activeStudents = $supervisor->projects->where('status', 'active')->count();
 
-        // Group this supervisor's projects by the student's department
         $projectsByDepartment = $supervisor->projects->groupBy(function ($project) {
             return $project->student->user->department_id;
         });
 
         $departmentMilestones = $projectsByDepartment->map(function ($projectsInDept) {
-            $firstStudent  = $projectsInDept->first()->student;
-            $department    = $firstStudent->user->department;
-            $departmentId  = $firstStudent->user->department_id;
+            $firstStudent = $projectsInDept->first()->student;
+            $department   = $firstStudent->user->department;
+            $departmentId = $firstStudent->user->department_id;
 
             $totalStudentsInDept = $projectsInDept->pluck('student_id')->unique()->count();
 
             $milestones = Milestone::where('department_id', $departmentId)
-                ->where('status', 'open')
                 ->orderBy('sequence_order')
                 ->get();
 
-            $allSubmissions = $projectsInDept->flatMap(function ($project) {
-                return $project->student->milestoneSubmissions;
-            });
+            $allSubmissions = $projectsInDept->flatMap(fn($p) => $p->student->milestoneSubmissions);
 
             $milestoneStats = $milestones->map(function ($milestone) use ($allSubmissions, $totalStudentsInDept) {
                 $submittedCount = $allSubmissions->where('milestone_id', $milestone->id)->count();
@@ -113,13 +102,40 @@ class StudentController extends Controller
                     'submitted_count' => $submittedCount,
                     'not_submitted'   => max(0, $totalStudentsInDept - $submittedCount),
                     'total_students'  => $totalStudentsInDept,
-                    'percent'         => $totalStudentsInDept > 0 ? round(($submittedCount / $totalStudentsInDept) * 100) : 0,
+                    'percent'         => $totalStudentsInDept > 0
+                        ? round(($submittedCount / $totalStudentsInDept) * 100)
+                        : 0,
+                ];
+            });
+
+            // Per-student milestone grid data
+            $studentRows = $projectsInDept->map(function ($project) use ($milestones) {
+                $submissions = $project->student->milestoneSubmissions->keyBy('milestone_id');
+
+                $milestoneStatuses = $milestones->map(function ($milestone) use ($submissions) {
+                    $sub = $submissions->get($milestone->id);
+                    return [
+                        'milestone'    => $milestone,
+                        'submission'   => $sub,
+                        'status'       => $sub?->status ?? null,
+                        'submitted_late' => $sub?->submitted_late ?? false,
+                    ];
+                });
+
+                return [
+                    'student'           => $project->student,
+                    'project'           => $project,
+                    'milestone_statuses' => $milestoneStatuses,
+                    'submitted_count'   => $submissions->count(),
+                    'total'             => $milestones->count(),
                 ];
             });
 
             return [
-                'department' => $department,
-                'stats'      => $milestoneStats,
+                'department'     => $department,
+                'stats'          => $milestoneStats,
+                'milestones'     => $milestones,
+                'student_rows'   => $studentRows,
             ];
         })->values();
 
