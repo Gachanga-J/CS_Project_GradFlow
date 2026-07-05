@@ -8,6 +8,37 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
+            <div class="bg-white shadow-sm sm:rounded-lg p-4">
+                <form method="GET" action="{{ route('department-coordinator.submissions.progress') }}" class="flex flex-wrap items-end gap-4">
+                    <div>
+                        <label for="intake_year" class="block text-xs font-medium text-gray-500 mb-1">Cohort (Intake Year)</label>
+                        <select id="intake_year" name="intake_year" onchange="this.form.submit()"
+                                class="border-gray-300 rounded-md shadow-sm text-sm">
+                            @forelse($intakeYears as $year)
+                                <option value="{{ $year }}" {{ (string) $selectedYear === (string) $year ? 'selected' : '' }}>
+                                    {{ $year }} Cohort
+                                </option>
+                            @empty
+                                <option value="">No cohorts yet</option>
+                            @endforelse
+                        </select>
+                    </div>
+                    <div>
+                        <label for="year_of_study" class="block text-xs font-medium text-gray-500 mb-1">Year of Study</label>
+                        <select id="year_of_study" name="year_of_study" onchange="this.form.submit()"
+                                class="border-gray-300 rounded-md shadow-sm text-sm">
+                            @forelse($yearsOfStudy as $y)
+                                <option value="{{ $y }}" {{ (string) $selectedYearOfStudy === (string) $y ? 'selected' : '' }}>
+                                    Year {{ $y }}
+                                </option>
+                            @empty
+                                <option value="">—</option>
+                            @endforelse
+                        </select>
+                    </div>
+                </form>
+            </div>
+
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
                     <h3 class="text-lg font-semibold text-gray-800">Student Progress Table</h3>

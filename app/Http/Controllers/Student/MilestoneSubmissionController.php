@@ -5,53 +5,95 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Milestone;
 use App\Models\MilestoneSubmission;
-use App\Models\Supervisor;
 use App\Models\Project;
+use App\Models\Supervisor;
 use App\Notifications\NewSubmissionReceived;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class MilestoneSubmissionController extends Controller
 {
-    public function show(Milestone $milestone)
+    /**
+     * Return the three scoping constraints for the authenticated student.
+     */
+    private function milestoneScope(): array
     {
-        $user = Auth::user();
-        abort_if($milestone->department_id !== $user->department_id, 403);
-
+        $user    = Auth::user();
         $student = $user->student;
 
-        // State-gate check: ensure all prior milestones are supervisor_approved
-        $this->enforceStateGate($milestone, $student->id);
+        return [
+            'department_id' => $user->department_id,
+            'intake_year'   => $student->intake_year,
+            'year_of_study' => $student->year_of_study,
+        ];
+    }
+
+    public function show(Milestone $milestone)
+    {
+        $user    = Auth::user();
+        $student = $user->student;
+        $scope   = $this->milestoneScope();
+
+        // Confirm this milestone belongs to this student's exact scope
+        abort_if(
+            $milestone->department_id !== $scope['department_id'] ||
+            $milestone->intake_year   !== $scope['intake_year']   ||
+            $milestone->year_of_study !== $scope['year_of_study'],
+            403,
+            'You do not have access to this milestone.'
+        );
+
+        // Auto-mark any unread notifications about this milestone as read
+        $user->unreadNotifications()
+            ->whereJsonContains('data->milestone_id', $milestone->id)
+            ->get()
+            ->each(fn($n) => $n->markAsRead());
+
+        // State-gate check
+        $this->enforceStateGate($milestone, $student->id, $scope);
 
         $submission = MilestoneSubmission::where('milestone_id', $milestone->id)
             ->where('student_id', $student->id)
             ->where('is_latest', true)
             ->first();
 
-        // All versions for history
         $submissionHistory = MilestoneSubmission::where('milestone_id', $milestone->id)
             ->where('student_id', $student->id)
             ->orderBy('version_number', 'desc')
             ->get();
 
-        // Is the student currently submitting/resubmitting past the deadline?
         $isLate = $milestone->deadline
             && now()->greaterThan($milestone->deadline->endOfDay())
             && $milestone->status === 'open';
 
-        return view('student.milestones.show', compact('milestone', 'submission', 'submissionHistory', 'isLate'));
+        return view('student.milestones.show', compact(
+            'milestone', 'submission', 'submissionHistory', 'isLate'
+        ));
     }
 
     public function store(Request $request, Milestone $milestone)
     {
-        $user = Auth::user();
-        abort_if($milestone->department_id !== $user->department_id, 403);
+        $user    = Auth::user();
+        $student = $user->student;
+        $scope   = $this->milestoneScope();
+
+        // Scope check
+        abort_if(
+            $milestone->department_id !== $scope['department_id'] ||
+            $milestone->intake_year   !== $scope['intake_year']   ||
+            $milestone->year_of_study !== $scope['year_of_study'],
+            403,
+            'You do not have access to this milestone.'
+        );
+
         abort_if($milestone->status === 'closed', 403, 'This milestone is closed.');
 
-        $student = $user->student;
+        // Supervisor assignment check
+        $project = $student->projects()->whereNotNull('supervisor_id')->first();
+        abort_if(! $project, 403, 'You cannot submit until a supervisor has been assigned to your project.');
 
-        // State-gate: block submission if prior milestone not yet supervisor_approved
-        $this->enforceStateGate($milestone, $student->id);
+        // State-gate check
+        $this->enforceStateGate($milestone, $student->id, $scope);
 
         $request->validate([
             'file' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
@@ -90,20 +132,22 @@ class MilestoneSubmissionController extends Controller
             'submitted_late'  => $isLate,
         ]);
 
-        // Notify the assigned supervisor, if this student has an active project with one
-        $project = $student->projects()->whereNotNull('supervisor_id')->first();
-        if ($project && $project->supervisor) {
+        // Notify assigned supervisor
+        if ($project->supervisor) {
             $project->supervisor->user->notify(new NewSubmissionReceived($submission));
         }
 
         return redirect()->route('student.milestones.show', $milestone)
-            ->with($isLate ? 'warning' : 'success', $isLate
-                ? 'Submission uploaded, but it was after the deadline and has been marked late.'
-                : 'Submission uploaded successfully!');
+            ->with(
+                $isLate ? 'warning' : 'success',
+                $isLate
+                    ? 'Submission uploaded, but it was after the deadline and has been marked late.'
+                    : 'Submission uploaded successfully!'
+            );
     }
 
     /**
-     * Show ranked supervisor matches for the student's active projects.
+     * Show ranked supervisor matches for the student's active project.
      */
     public function supervisorMatches()
     {
@@ -114,8 +158,7 @@ class MilestoneSubmissionController extends Controller
             ->where('status', 'active')
             ->get()
             ->map(function ($project) {
-                // Rank all supervisors by compatibility (only if no supervisor yet)
-                if (!$project->supervisor_id) {
+                if (! $project->supervisor_id) {
                     $supervisors = Supervisor::with(['user', 'tags'])
                         ->whereHas('user', fn($q) => $q->where('is_active', true))
                         ->get()
@@ -139,12 +182,14 @@ class MilestoneSubmissionController extends Controller
     }
 
     /**
-     * State-gate: abort if any previous milestone (lower sequence_order)
-     * does not have a supervisor_approved submission for this student.
+     * State-gate: block submission if any prior milestone (lower sequence_order)
+     * in the same scope does not have a supervisor_approved or graded submission.
      */
-    private function enforceStateGate(Milestone $milestone, int $studentId): void
+    private function enforceStateGate(Milestone $milestone, int $studentId, array $scope): void
     {
-        $priorMilestones = Milestone::where('department_id', $milestone->department_id)
+        $priorMilestones = Milestone::where('department_id', $scope['department_id'])
+            ->where('intake_year',   $scope['intake_year'])
+            ->where('year_of_study', $scope['year_of_study'])
             ->where('sequence_order', '<', $milestone->sequence_order)
             ->orderBy('sequence_order')
             ->get();
@@ -156,7 +201,7 @@ class MilestoneSubmissionController extends Controller
                 ->whereIn('status', ['supervisor_approved', 'graded'])
                 ->exists();
 
-            if (!$approved) {
+            if (! $approved) {
                 abort(403, "You must have milestone \"{$prior->title}\" approved by your supervisor before submitting this one.");
             }
         }

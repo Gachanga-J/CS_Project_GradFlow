@@ -11,7 +11,7 @@ class Student extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'reg_number', 'year_of_study'];
+    protected $fillable = ['user_id', 'reg_number', 'year_of_study', 'intake_year'];
 
     public function user(): BelongsTo
     {

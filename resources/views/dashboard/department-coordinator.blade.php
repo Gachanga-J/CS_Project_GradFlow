@@ -24,14 +24,38 @@
 
             {{-- Quick Stats --}}
             @php
-                $deptId             = auth()->user()->department_id;
-                $deptMilestoneIds   = \App\Models\Milestone::where('department_id', $deptId)->pluck('id');
+                $deptId = auth()->user()->department_id;
+
+                // Get distinct cohorts in this department
+                $cohortYears = \App\Models\Student::whereHas('user', fn($q) => $q->where('department_id', $deptId))
+                    ->whereNotNull('intake_year')
+                    ->distinct()
+                    ->orderByDesc('intake_year')
+                    ->pluck('intake_year');
+
+                // Scope stats to all cohorts in this department
+                $deptMilestoneIds = \App\Models\Milestone::where('department_id', $deptId)->pluck('id');
+
                 $pendingSubmissions = \App\Models\MilestoneSubmission::whereIn('milestone_id', $deptMilestoneIds)
-                                        ->where('status', 'submitted')
-                                        ->where('is_latest', true)
-                                        ->count();
-                $totalMilestones    = $deptMilestoneIds->count();
+                    ->where('status', 'supervisor_approved')
+                    ->where('is_latest', true)
+                    ->count();
+
+                $totalMilestones = $deptMilestoneIds->count();
+                $totalCohorts    = $cohortYears->count();
             @endphp
+
+            {{-- Cohort pills --}}
+            @if($cohortYears->isNotEmpty())
+                <div class="flex flex-wrap gap-2">
+                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 self-center">Active cohorts:</span>
+                    @foreach($cohortYears as $year)
+                        <span class="text-xs font-bold px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700">
+                            {{ $year }} Cohort
+                        </span>
+                    @endforeach
+                </div>
+            @endif
 
             <div style="display:flex; gap:16px;">
 
@@ -61,7 +85,27 @@
                     </div>
                     <div>
                         <p style="font-size:28px; font-weight:700; color:#4f46e5;">{{ $totalMilestones }}</p>
-                        <p style="font-size:13px; color:#6b7280;">Total Milestones Created</p>
+                        <p style="font-size:13px; color:#6b7280;">Total Milestones
+                            @if($totalCohorts > 0)
+                                <span style="font-size:11px; color:#9ca3af;">across {{ $totalCohorts }} cohort{{ $totalCohorts > 1 ? 's' : '' }}</span>
+                            @endif
+                        </p>
+                    </div>
+                </div>
+
+                {{-- Cohorts Card --}}
+                <div class="bg-white shadow-sm sm:rounded-lg p-6" style="flex:1; display:flex; align-items:center; gap:16px;">
+                    <div style="background:#dcfce7; border-radius:12px; padding:12px; display:flex; align-items:center; justify-content:center;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p style="font-size:28px; font-weight:700; color:#16a34a;">{{ $totalCohorts }}</p>
+                        <p style="font-size:13px; color:#6b7280;">Active Cohort{{ $totalCohorts !== 1 ? 's' : '' }}</p>
                     </div>
                 </div>
 
@@ -105,6 +149,16 @@
                                 <path d="M12 8v8M8 12h8"/>
                             </svg>
                             New Milestone
+                        </a>
+
+                        <a href="{{ route('department-coordinator.reports.index') }}"
+                           style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; background:#0891b2; color:white; font-weight:600; font-size:14px; padding:12px 20px; border-radius:6px; text-decoration:none;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="20" x2="18" y2="10"/>
+                                <line x1="12" y1="20" x2="12" y2="4"/>
+                                <line x1="6" y1="20" x2="6" y2="14"/>
+                            </svg>
+                            View Reports
                         </a>
 
                     </div>

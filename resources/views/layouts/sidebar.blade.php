@@ -9,6 +9,15 @@
             })->count();
     }
 
+    $dcPendingCount = 0;
+    if ($role === 'department_coordinator') {
+        $dcPendingCount = \App\Models\MilestoneSubmission::where('status', 'supervisor_approved')
+            ->where('is_latest', true)
+            ->whereHas('milestone', function ($query) {
+                $query->where('department_id', Auth::user()->department_id);
+            })->count();
+    }
+
     // Student active project
     $studentProject = null;
     if ($role === 'student' && Auth::user()->student) {
@@ -96,6 +105,15 @@
                 </svg>
                 Research Tags
             </a>
+
+            <a href="{{ route('system-administrator.reports.index') }}"
+               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+               {{ request()->routeIs('system-administrator.reports.*') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+                Reports
+            </a>
         @endif
 
         {{-- Department Coordinator --}}
@@ -131,6 +149,11 @@
                     <path d="M7 2v4.5a2 2 0 0 0 .586 1.414L12 12 7.586 16.086A2 2 0 0 0 7 17.5V22"/>
                 </svg>
                 Review Submissions
+                @if($dcPendingCount > 0)
+                    <span class="ml-auto text-xs font-bold px-1.5 py-0.5 rounded-full bg-amber-500 text-white">
+                        {{ $dcPendingCount > 9 ? '9+' : $dcPendingCount }}
+                    </span>
+                @endif
             </a>
 
             <a href="{{ route('department-coordinator.submissions.progress') }}"
@@ -141,6 +164,15 @@
                     <path d="M3 9h18M9 21V9"/>
                 </svg>
                 Student Progress
+            </a>
+
+            <a href="{{ route('department-coordinator.reports.index') }}"
+               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+               {{ request()->routeIs('department-coordinator.reports.*') ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100' }}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+                Reports
             </a>
 
             <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Projects</p>

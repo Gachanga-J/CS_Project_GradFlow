@@ -35,6 +35,10 @@ class DeadlineReminderService
         foreach ($milestones as $milestone) {
             $students = User::where('role', 'student')
                 ->where('department_id', $milestone->department_id)
+                ->whereHas('student', function ($q) use ($milestone) {
+                    $q->where('intake_year', $milestone->intake_year)
+                      ->where('year_of_study', $milestone->year_of_study);
+                })
                 ->get();
 
             foreach ($students as $student) {
@@ -68,6 +72,10 @@ class DeadlineReminderService
         foreach ($milestones as $milestone) {
             $students = User::where('role', 'student')
                 ->where('department_id', $milestone->department_id)
+                ->whereHas('student', function ($q) use ($milestone) {
+                    $q->where('intake_year', $milestone->intake_year)
+                      ->where('year_of_study', $milestone->year_of_study);
+                })
                 ->get();
 
             foreach ($students as $student) {

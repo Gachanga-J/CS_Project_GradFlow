@@ -26,7 +26,7 @@ class UserFactory extends Factory
             'last_name' => $lastName,
             'email' => User::generateEmail($firstName, $lastName, 'stu'),
             'email_verified_at' => now(),
-            'password' => Hash::make(env('COMMON_USER_PASSWORD', '@GradFlow123')), // password
+            'password' => Hash::make(env('SEED_DEFAULT_PASSWORD', 'password123')), // password
             'role' => 'student',
             'department_id' => null,
             'is_active' => true,

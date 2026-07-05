@@ -33,6 +33,7 @@ class ProjectController extends Controller
         $students = Student::with('user')
             ->whereHas('user', fn($q) => $q->where('department_id', $this->departmentId())
                 ->where('is_active', true))
+            ->whereDoesntHave('projects', fn($q) => $q->where('status', 'active'))
             ->get()
             ->sortBy('user.first_name');
 
@@ -53,6 +54,10 @@ class ProjectController extends Controller
         // Ensure student belongs to this department
         $student = Student::with('user')->findOrFail($request->student_id);
         abort_if($student->user->department_id !== $this->departmentId(), 403);
+
+        // Prevent creating a second active project for a student who already has one
+        $existingActive = $student->projects()->where('status', 'active')->exists();
+        abort_if($existingActive, 422, 'This student already has an active project. Close or reassign the existing project first.');
 
         $project = Project::create([
             'student_id'    => $request->student_id,

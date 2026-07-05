@@ -11,7 +11,10 @@
             @php
                 $student    = auth()->user()->student;
                 $milestones = \App\Models\Milestone::where('department_id', auth()->user()->department_id)
-                                ->orderBy('sequence_order')->get();
+                                ->where('intake_year',   $student->intake_year)
+                                ->where('year_of_study', $student->year_of_study)
+                                ->orderBy('sequence_order')
+                                ->get();
 
                 // Pre-load all submissions for this student in one query
                 $submissionMap = \App\Models\MilestoneSubmission::where('student_id', $student->id)
@@ -20,10 +23,10 @@
                     ->keyBy('milestone_id');
 
                 // Progress counts
-                $totalMilestones    = $milestones->count();
-                $submittedCount     = $submissionMap->count();
-                $gradedCount        = $submissionMap->filter(fn($s) => $s->status === 'graded')->count();
-                $progressPercent    = $totalMilestones > 0 ? round(($submittedCount / $totalMilestones) * 100) : 0;
+                $totalMilestones = $milestones->count();
+                $submittedCount  = $submissionMap->count();
+                $gradedCount     = $submissionMap->filter(fn($s) => $s->status === 'graded')->count();
+                $progressPercent = $totalMilestones > 0 ? round(($submittedCount / $totalMilestones) * 100) : 0;
 
                 // Urgent milestones (deadline within 3 days, not yet submitted)
                 $urgentMilestones = $milestones->filter(function ($m) use ($submissionMap) {
@@ -87,8 +90,9 @@
                     <ul class="mt-4 space-y-1 text-sm text-gray-600 dark:text-gray-400">
                         <li><strong>{{ __('Email') }}:</strong> {{ auth()->user()->email }}</li>
                         <li><strong>{{ __('Department') }}:</strong> {{ auth()->user()->department->name ?? __('Not assigned') }}</li>
-                        <li><strong>{{ __('Registration Number') }}:</strong> {{ auth()->user()->student->reg_number }}</li>
-                        <li><strong>{{ __('Year of Study') }}:</strong> {{ auth()->user()->student->year_of_study ?? __('Not set') }}</li>
+                        <li><strong>{{ __('Registration Number') }}:</strong> {{ $student->reg_number }}</li>
+                        <li><strong>{{ __('Year of Study') }}:</strong> {{ $student->year_of_study ?? __('Not set') }}</li>
+                        <li><strong>{{ __('Cohort') }}:</strong> {{ $student->intake_year ?? __('Not set') }}</li>
                     </ul>
                 </div>
             </div>
@@ -105,7 +109,6 @@
                             </span>
                         </div>
 
-                        {{-- Progress bar --}}
                         <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
                             <div class="h-3 rounded-full transition-all duration-500
                                 {{ $progressPercent === 100 ? 'bg-green-500' : ($overdueMilestones->count() > 0 ? 'bg-red-500' : ($urgentMilestones->count() > 0 ? 'bg-orange-500' : 'bg-indigo-500')) }}"
@@ -113,7 +116,6 @@
                             </div>
                         </div>
 
-                        {{-- Stats row --}}
                         <div class="flex items-center gap-6 mt-4">
                             <div class="flex items-center gap-1.5">
                                 <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
@@ -135,7 +137,6 @@
                             @endif
                         </div>
 
-                        {{-- Completion message --}}
                         @if($progressPercent === 100)
                             <p class="mt-3 text-xs font-medium text-green-600">
                                 🎉 All milestones submitted!
@@ -154,7 +155,7 @@
 
                     @if ($milestones->isEmpty())
                         <p class="text-sm text-gray-400 italic">
-                            No milestones have been posted yet. Check back later.
+                            No milestones have been posted for your cohort and year yet. Check back later.
                         </p>
                     @else
                         <div class="space-y-3">
@@ -171,10 +172,8 @@
                                 @endphp
 
                                 <div class="flex items-center justify-between p-4 border rounded-lg
-                                    @if($isOverdue)
-                                        border-red-300 bg-red-50
-                                    @elseif($isUrgent)
-                                        border-orange-300 bg-orange-50
+                                    @if($isOverdue) border-red-300 bg-red-50
+                                    @elseif($isUrgent) border-orange-300 bg-orange-50
                                     @elseif($submission?->status === 'graded') border-green-200 bg-green-50
                                     @elseif($submission?->status === 'supervisor_approved') border-blue-200 bg-blue-50
                                     @elseif($submission?->status === 'supervisor_rejected') border-red-200 bg-red-50
@@ -236,7 +235,6 @@
                                             </a>
                                         @endif
                                     </div>
-
                                 </div>
                             @endforeach
                         </div>

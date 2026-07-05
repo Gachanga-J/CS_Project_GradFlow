@@ -18,9 +18,10 @@ class StudentSeeder extends Seeder
             ->create(['department_id' => $department->id])
             ->each(function (User $user, int $index) {
                 Student::create([
-                    'user_id' => $user->id,
-                    'reg_number' => (string) (190000 + $index + 1),
+                    'user_id'       => $user->id,
+                    'reg_number'    => (string) (190000 + $index + 1),
                     'year_of_study' => fake()->numberBetween(1, 4),
+                    'intake_year'   => fake()->randomElement([2024, 2025, 2026]),
                 ]);
             });
     }

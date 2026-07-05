@@ -14,9 +14,44 @@
                 </div>
             @endif
 
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4">
+                <form method="GET" action="{{ route('department-coordinator.submissions.index') }}" class="flex flex-wrap items-end gap-4">
+                    <div>
+                        <label for="intake_year" class="block text-xs font-medium text-gray-500 mb-1">Cohort (Intake Year)</label>
+                        <select id="intake_year" name="intake_year" onchange="this.form.submit()"
+                                class="border-gray-300 rounded-md shadow-sm text-sm">
+                            @forelse($intakeYears as $year)
+                                <option value="{{ $year }}" {{ (string) $selectedYear === (string) $year ? 'selected' : '' }}>
+                                    {{ $year }} Cohort
+                                </option>
+                            @empty
+                                <option value="">No cohorts yet</option>
+                            @endforelse
+                        </select>
+                    </div>
+                    <div>
+                        <label for="year_of_study" class="block text-xs font-medium text-gray-500 mb-1">Year of Study</label>
+                        <select id="year_of_study" name="year_of_study" onchange="this.form.submit()"
+                                class="border-gray-300 rounded-md shadow-sm text-sm">
+                            @forelse($yearsOfStudy as $y)
+                                <option value="{{ $y }}" {{ (string) $selectedYearOfStudy === (string) $y ? 'selected' : '' }}>
+                                    Year {{ $y }}
+                                </option>
+                            @empty
+                                <option value="">—</option>
+                            @endforelse
+                        </select>
+                    </div>
+                </form>
+            </div>
+
             @php
                 $totalStudents = \App\Models\User::where('role', 'student')
                     ->where('department_id', auth()->user()->department_id)
+                    ->whereHas('student', function ($q) use ($selectedYear, $selectedYearOfStudy) {
+                        $q->where('intake_year', $selectedYear)
+                          ->where('year_of_study', $selectedYearOfStudy);
+                    })
                     ->count();
             @endphp
 
@@ -181,7 +216,7 @@
                                         <div class="mt-4 flex flex-wrap items-center gap-3">
                                             <a href="{{ route('department-coordinator.submissions.download', $submission) }}"
                                                style="font-size:13px; font-weight:600; padding:6px 16px; border-radius:6px; border:2px solid #6b7280; background:white; color:#374151; text-decoration:none;">
-                                                Download File
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download File
                                             </a>
 
                                             @if ($submission->status === 'supervisor_approved')
@@ -238,7 +273,7 @@
             @empty
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
-                        <p class="text-sm text-gray-400 italic">No milestones created yet.</p>
+                        <p class="text-sm text-gray-400 italic">No milestones created yet for this cohort/year.</p>
                     </div>
                 </div>
             @endforelse

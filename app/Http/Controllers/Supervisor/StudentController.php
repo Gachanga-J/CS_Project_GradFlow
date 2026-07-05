@@ -25,6 +25,8 @@ class StudentController extends Controller
 
             $milestones = Milestone::where('department_id', $departmentId)
                 ->where('status', 'open')
+                ->where('intake_year', $project->student->intake_year)
+                ->where('year_of_study', $project->student->year_of_study)
                 ->orderBy('sequence_order')
                 ->get();
 
@@ -78,7 +80,8 @@ class StudentController extends Controller
         $activeStudents = $supervisor->projects->where('status', 'active')->count();
 
         $projectsByDepartment = $supervisor->projects->groupBy(function ($project) {
-            return $project->student->user->department_id;
+            $student = $project->student;
+            return $student->user->department_id . '|' . $student->intake_year . '|' . $student->year_of_study;
         });
 
         $departmentMilestones = $projectsByDepartment->map(function ($projectsInDept) {
@@ -89,6 +92,8 @@ class StudentController extends Controller
             $totalStudentsInDept = $projectsInDept->pluck('student_id')->unique()->count();
 
             $milestones = Milestone::where('department_id', $departmentId)
+                ->where('intake_year', $firstStudent->intake_year)
+                ->where('year_of_study', $firstStudent->year_of_study)
                 ->orderBy('sequence_order')
                 ->get();
 

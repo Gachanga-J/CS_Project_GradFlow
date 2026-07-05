@@ -14,6 +14,8 @@ class Milestone extends Model
     protected $fillable = [
         'created_by',
         'department_id',
+        'intake_year',
+        'year_of_study',
         'title',
         'description',
         'deadline',
