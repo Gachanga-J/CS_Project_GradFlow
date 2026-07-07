@@ -45,7 +45,7 @@
 
         <div class="mt-4">
             <x-input-label for="year_of_study" :value="__('Year of Study')" />
-            <select id="year_of_study" name="year_of_study" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+            <select id="year_of_study" name="year_of_study" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
                 <option value="">-- Select Year --</option>
                 @foreach ([1, 2, 3, 4, 5, 6] as $year)
                     <option value="{{ $year }}" {{ (string) old('year_of_study') === (string) $year ? 'selected' : '' }}>

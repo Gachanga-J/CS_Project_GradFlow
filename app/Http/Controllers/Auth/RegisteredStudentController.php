@@ -42,7 +42,7 @@ class RegisteredStudentController extends Controller
             ],
             'department_id' => ['required', 'exists:departments,id'],
             'reg_number'    => ['required', 'string', 'max:30', Rule::unique('students', 'reg_number')],
-            'year_of_study' => ['nullable', 'integer', 'between:1,6'],
+            'year_of_study' => ['required', 'integer', 'between:1,6'],
             'intake_year'   => ['required', 'integer', 'min:2000', 'max:' . now()->year],
             'password'      => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
